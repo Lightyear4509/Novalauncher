@@ -1,0 +1,42 @@
+﻿<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:NovaLauncher.Models"
+    x:Class="NovaLauncher.Views.GameCard"
+    x:DataType="models:Game">
+
+    <Border
+        Margin="0,4"
+        Padding="12"
+        Background="#202632"
+        CornerRadius="8">
+
+        <StackPanel Spacing="5">
+
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="8">
+
+				<TextBlock
+	                 FontSize="16"
+	                 Foreground="Gold"
+	                 Text="★"
+	                 IsVisible="{Binding IsFavorite}" />
+
+                <TextBlock
+                    FontSize="17"
+                    FontWeight="SemiBold"
+                    Foreground="White"
+                    Text="{Binding Name}" />
+
+            </StackPanel>
+
+            <TextBlock
+                MaxWidth="300"
+                Foreground="#98A2B3"
+                Text="{Binding ExecutablePath}"
+                TextTrimming="CharacterEllipsis" />
+
+        </StackPanel>
+    </Border>
+</UserControl>

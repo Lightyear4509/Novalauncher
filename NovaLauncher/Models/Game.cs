@@ -19,4 +19,7 @@ public partial class Game : ObservableObject
 
     [ObservableProperty]
     private string? coverImagePath;
+
+    [ObservableProperty]
+    private bool isFavorite;
 }

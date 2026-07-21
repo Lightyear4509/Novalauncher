@@ -1,6 +1,7 @@
 <Window
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:views="using:NovaLauncher.Views"
 	xmlns:viewModels="using:NovaLauncher.ViewModels"
 	x:DataType="viewModels:MainWindowViewModel"
 	xmlns:models="using:NovaLauncher.Models"
@@ -67,6 +68,14 @@
 
 				<Grid RowDefinitions="Auto,Auto,*,Auto">
 
+					<TextBlock
+						Grid.Row="0"
+						Margin="4,0,0,14"
+						FontSize="20"
+						FontWeight="Bold"
+						Foreground="White"
+						Text="Game Library" />
+
 					<Grid
 						Grid.Row="1"
 						Margin="0,0,0,12"
@@ -95,32 +104,10 @@
 
 						<ListBox.ItemTemplate>
 							<DataTemplate x:DataType="models:Game">
-
-								<Border
-                                    Margin="0,4"
-                                    Padding="12"
-                                    Background="#202632"
-                                    CornerRadius="8">
-
-									<StackPanel Spacing="5">
-
-										<TextBlock
-                                            FontSize="17"
-                                            FontWeight="SemiBold"
-                                            Foreground="White"
-                                            Text="{Binding Name}" />
-
-										<TextBlock
-                                            MaxWidth="300"
-                                            Foreground="#98A2B3"
-                                            Text="{Binding ExecutablePath}"
-                                            TextTrimming="CharacterEllipsis" />
-
-									</StackPanel>
-								</Border>
-
+								<views:GameCard />
 							</DataTemplate>
 						</ListBox.ItemTemplate>
+						
 					</ListBox>
 
 					<TextBlock
@@ -210,7 +197,7 @@
 					<Grid
 						Grid.Row="3"
 						Margin="0,16,0,0"
-						ColumnDefinitions="Auto,Auto,*">
+						ColumnDefinitions="Auto,Auto,Auto,*">
 
 						<Button
 							x:Name="SaveNameButton"
@@ -230,8 +217,15 @@
 							IsEnabled="False" />
 
 						<Button
-							x:Name="RemoveCoverButton"
 							Grid.Column="2"
+							Margin="10,0,0,0"
+							Padding="16,9"
+							Command="{Binding ToggleFavoriteCommand}"
+							Content="★ Favorite" />
+
+						<Button
+							x:Name="RemoveCoverButton"
+							Grid.Column="3"
 							Margin="10,0,0,0"
 							Padding="16,9"
 							HorizontalAlignment="Left"

@@ -25,6 +25,11 @@ public partial class MainWindowViewModel : ObservableObject
     "Recently Added",
     "Oldest Added"
 };
+    public string FavoriteButtonText =>
+    SelectedGame?.IsFavorite == true
+        ? "★ Unfavorite"
+        : "★ Favorite";
+
     public ObservableCollection<Game> FilteredGames { get; }
 
     [ObservableProperty]
@@ -140,7 +145,30 @@ public partial class MainWindowViewModel : ObservableObject
         StatusText =
             $"Status: Renamed game to {gameToRename.Name}.";
     }
-    
+
+    [RelayCommand]
+    private void ToggleFavorite()
+    {
+        Game? selectedGame = SelectedGame;
+
+        if (selectedGame is null)
+        {
+            StatusText = "Status: Select a game first.";
+            return;
+        }
+
+        selectedGame.IsFavorite = !selectedGame.IsFavorite;
+        OnPropertyChanged(nameof(FavoriteButtonText));
+
+        SaveLibrary();
+
+        RefreshFilteredGames();
+
+        StatusText = selectedGame.IsFavorite
+            ? $"Status: {selectedGame.Name} was added to favorites."
+            : $"Status: {selectedGame.Name} was removed from favorites.";
+    }
+
     [RelayCommand]
     private void RemoveCover()
     {
