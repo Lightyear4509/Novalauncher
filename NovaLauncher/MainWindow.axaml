@@ -232,13 +232,22 @@
 
 					</Grid>
 
-					<TextBlock
-						x:Name="StatusText"
-						Grid.Row="4"
-						Margin="0,18,0,0"
-						Foreground="#C8D1E0"
-						Text="{Binding StatusText}"
-						TextWrapping="Wrap" />
+					<Border
+							Grid.Row="4"
+							Margin="0,18,0,0"
+							Padding="12"
+							VerticalAlignment="Top"
+							Background="#202632"
+							BorderBrush="#303747"
+							BorderThickness="1"
+							CornerRadius="8">
+
+							<TextBlock
+								x:Name="StatusText"
+								Foreground="#C8D1E0"
+								Text="{Binding StatusText}"
+								TextWrapping="Wrap" />
+					</Border>
 
 					<!-- Game actions -->
 					<Grid

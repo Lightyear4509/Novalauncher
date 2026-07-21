@@ -106,8 +106,7 @@ public partial class MainWindow : Window
             SaveLibrary();
             UpdateLibraryCount();
 
-            StatusText.Text =
-                $"Status: Added {newGame.Name} to the library.";
+            SetStatus($"Added {newGame.Name} to the library.");
         }
         catch (Exception exception)
         {
@@ -151,7 +150,7 @@ public partial class MainWindow : Window
 
         if (selectedGame is null)
         {
-            StatusText.Text = "Status: Select a game first.";
+            SetStatus("Select a game first.");
             return;
         }
 
@@ -307,8 +306,7 @@ public partial class MainWindow : Window
 
         if (selectedGame is null)
         {
-            StatusText.Text =
-                "Status: Select a game first.";
+            SetStatus("Select a game first.");
 
             return;
         }
@@ -370,8 +368,7 @@ public partial class MainWindow : Window
             ClearSelectedGame();
         }
 
-        StatusText.Text =
-            $"Status: Removed {removedGameName} from the library.";
+        SetStatus($"Removed {removedGameName} from the library.");
     }
 
     private Game? GetSelectedGame()
@@ -417,5 +414,9 @@ public partial class MainWindow : Window
         RemoveCoverButton.IsEnabled = false;
         LaunchButton.IsEnabled = false;
         RemoveButton.IsEnabled = false;
+    }
+    private void SetStatus(string message)
+    {
+        _viewModel.StatusText = $"Status: {message}";
     }
 }
