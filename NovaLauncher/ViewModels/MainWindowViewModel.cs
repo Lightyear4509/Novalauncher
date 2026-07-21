@@ -54,6 +54,9 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string selectedSortOption = "Name: A-Z";
 
+    [ObservableProperty]
+    private string selectedLibraryView = "Library";
+
     public MainWindowViewModel(
     IFileDialogService fileDialogService)
     {
@@ -144,6 +147,27 @@ public partial class MainWindowViewModel : ObservableObject
 
         StatusText =
             $"Status: Renamed game to {gameToRename.Name}.";
+    }
+
+    [RelayCommand]
+    private void ShowLibrary()
+    {
+        SelectedLibraryView = "Library";
+        RefreshFilteredGames();
+    }
+
+    [RelayCommand]
+    private void ShowFavorites()
+    {
+        SelectedLibraryView = "Favorites";
+        RefreshFilteredGames();
+    }
+
+    [RelayCommand]
+    private void ShowRecentlyAdded()
+    {
+        SelectedLibraryView = "Recently Added";
+        RefreshFilteredGames();
     }
 
     [RelayCommand]
@@ -387,6 +411,19 @@ public partial class MainWindowViewModel : ObservableObject
         string searchQuery = SearchText.Trim();
 
         IEnumerable<Game> matchingGames = Games;
+
+        matchingGames = SelectedLibraryView switch
+        {
+            "Favorites" =>
+                matchingGames.Where(game => game.IsFavorite),
+
+            "Recently Added" =>
+                matchingGames
+                    .OrderByDescending(game => game.AddedAt)
+                    .Take(10),
+
+            _ => matchingGames
+        };
 
         if (!string.IsNullOrWhiteSpace(searchQuery))
         {
