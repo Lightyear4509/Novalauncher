@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Platform.Storage;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
 using NovaLauncher.Models;
 using NovaLauncher.Services;
 using NovaLauncher.ViewModels;
@@ -29,15 +28,15 @@ public partial class MainWindow : Window
 
         _libraryService = new GameLibraryService();
 
-        // Temporarily keep this alias so the existing event handlers
-        // continue working during the refactor.
+        // Temporary alias while the remaining event handlers
+        // are gradually moved into the ViewModel.
         _games = _viewModel.Games;
 
         UpdateLibraryCount();
 
         if (_games.Count > 0)
         {
-            StatusText.Text = "Status: Saved library loaded.";
+            SetStatus("Saved library loaded.");
         }
     }
 
@@ -55,7 +54,8 @@ public partial class MainWindow : Window
                         AllowMultiple = false,
                         FileTypeFilter =
                         [
-                            new FilePickerFileType("Windows executable")
+                            new FilePickerFileType(
+                                "Windows executable")
                             {
                                 Patterns = ["*.exe"]
                             }
@@ -64,7 +64,7 @@ public partial class MainWindow : Window
 
             if (selectedFiles.Count == 0)
             {
-                StatusText.Text = "Status: No file was selected.";
+                SetStatus("No file was selected.");
                 return;
             }
 
@@ -73,11 +73,12 @@ public partial class MainWindow : Window
 
             if (string.IsNullOrWhiteSpace(executablePath))
             {
-                StatusText.Text =
-                    "Status: The selected file does not have a local path.";
+                SetStatus(
+                    "The selected file does not have a local path.");
 
                 return;
             }
+
             bool alreadyExists = _games.Any(game =>
                 game is not null &&
                 string.Equals(
@@ -87,37 +88,39 @@ public partial class MainWindow : Window
 
             if (alreadyExists)
             {
-                StatusText.Text =
-                    "Status: That game is already in your library.";
+                SetStatus(
+                    "That game is already in your library.");
 
                 return;
             }
 
             Game newGame = new()
             {
-                Name = Path.GetFileNameWithoutExtension(executablePath),
+                Name =
+                    Path.GetFileNameWithoutExtension(executablePath),
+
                 ExecutablePath = executablePath
             };
 
             _games.Add(newGame);
-
-            GameList.SelectedItem = newGame;
+            _viewModel.SelectedGame = newGame;
 
             SaveLibrary();
             UpdateLibraryCount();
 
-            SetStatus($"Added {newGame.Name} to the library.");
+            SetStatus(
+                $"Added {newGame.Name} to the library.");
         }
         catch (Exception exception)
         {
-            StatusText.Text =
-                $"Status: Could not add the game. {exception.Message}";
+            SetStatus(
+                $"Could not add the game. {exception.Message}");
         }
     }
 
     private void GameList_SelectionChanged(
-    object? sender,
-    SelectionChangedEventArgs e)
+        object? sender,
+        SelectionChangedEventArgs e)
     {
         Game? selectedGame = GetSelectedGame();
 
@@ -127,30 +130,27 @@ public partial class MainWindow : Window
             return;
         }
 
-        GameNameTextBox.Text = selectedGame.Name;
-        SelectedGamePathText.Text = selectedGame.ExecutablePath;
+        _viewModel.SelectedGame = selectedGame;
 
         GameNameTextBox.IsEnabled = true;
         SaveNameButton.IsEnabled = true;
         ChooseCoverButton.IsEnabled = true;
-        LaunchButton.IsEnabled = true;
         RemoveButton.IsEnabled = true;
 
         DisplayCover(selectedGame);
 
-        StatusText.Text =
-            $"Status: {selectedGame.Name} is selected.";
+        SetStatus($"{selectedGame.Name} is selected.");
     }
 
     private async void ChooseCoverButton_Click(
-    object? sender,
-    RoutedEventArgs e)
+        object? sender,
+        RoutedEventArgs e)
     {
         Game? selectedGame = GetSelectedGame();
 
         if (selectedGame is null)
         {
-            StatusText.Text = "Status: Select a game first.";
+            SetStatus("Select a game first.");
             return;
         }
 
@@ -165,23 +165,23 @@ public partial class MainWindow : Window
                         FileTypeFilter =
                         [
                             new FilePickerFileType("Image files")
-                        {
-                            Patterns =
-                            [
-                                "*.png",
-                                "*.jpg",
-                                "*.jpeg",
-                                "*.webp",
-                                "*.bmp"
-                            ]
-                        }
+                            {
+                                Patterns =
+                                [
+                                    "*.png",
+                                    "*.jpg",
+                                    "*.jpeg",
+                                    "*.webp",
+                                    "*.bmp"
+                                ]
+                            }
                         ]
                     });
 
             if (selectedFiles.Count == 0)
             {
-                StatusText.Text =
-                    "Status: No cover image was selected.";
+                SetStatus(
+                    "No cover image was selected.");
 
                 return;
             }
@@ -191,8 +191,8 @@ public partial class MainWindow : Window
 
             if (string.IsNullOrWhiteSpace(imagePath))
             {
-                StatusText.Text =
-                    "Status: The image does not have a local path.";
+                SetStatus(
+                    "The image does not have a local path.");
 
                 return;
             }
@@ -202,18 +202,27 @@ public partial class MainWindow : Window
             SaveLibrary();
             DisplayCover(selectedGame);
 
-            StatusText.Text =
-                $"Status: Cover updated for {selectedGame.Name}.";
+            SetStatus(
+                $"Cover updated for {selectedGame.Name}.");
         }
         catch (Exception exception)
         {
-            StatusText.Text =
-                $"Status: Could not load the cover. {exception.Message}";
+            SetStatus(
+                $"Could not load the cover. {exception.Message}");
         }
     }
-    private void DisplayCover(Game game)
+
+    private void DisplayCover(Game? game)
     {
         CoverImage.Source = null;
+
+        if (game is null)
+        {
+            CoverImage.IsVisible = false;
+            CoverPlaceholder.IsVisible = true;
+            RemoveCoverButton.IsEnabled = false;
+            return;
+        }
 
         bool validCover =
             !string.IsNullOrWhiteSpace(game.CoverImagePath) &&
@@ -229,7 +238,9 @@ public partial class MainWindow : Window
 
         try
         {
-            CoverImage.Source = new Bitmap(game.CoverImagePath!);
+            CoverImage.Source =
+                new Bitmap(game.CoverImagePath!);
+
             CoverImage.IsVisible = true;
             CoverPlaceholder.IsVisible = false;
             RemoveCoverButton.IsEnabled = true;
@@ -239,6 +250,9 @@ public partial class MainWindow : Window
             CoverImage.IsVisible = false;
             CoverPlaceholder.IsVisible = true;
             RemoveCoverButton.IsEnabled = false;
+
+            SetStatus(
+                "The selected cover image could not be displayed.");
         }
     }
 
@@ -250,6 +264,7 @@ public partial class MainWindow : Window
 
         if (selectedGame is null)
         {
+            SetStatus("Select a game first.");
             return;
         }
 
@@ -258,51 +273,8 @@ public partial class MainWindow : Window
         SaveLibrary();
         DisplayCover(selectedGame);
 
-        StatusText.Text =
-            $"Status: Removed the cover for {selectedGame.Name}.";
-    }
-
-    private void LaunchButton_Click(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        Game? selectedGame = GetSelectedGame();
-
-        if (selectedGame is null)
-        {
-            SetStatus("Select a game first.");
-
-            return;
-        }
-
-        if (!File.Exists(selectedGame.ExecutablePath))
-        {
-            StatusText.Text =
-                "Status: The executable could not be found. It may have been moved or deleted.";
-
-            return;
-        }
-
-        try
-        {
-            ProcessStartInfo startInfo = new()
-            {
-                FileName = selectedGame.ExecutablePath,
-                WorkingDirectory =
-                    Path.GetDirectoryName(selectedGame.ExecutablePath),
-                UseShellExecute = true
-            };
-
-            Process.Start(startInfo);
-
-            StatusText.Text =
-                $"Status: Launched {selectedGame.Name}.";
-        }
-        catch (Exception exception)
-        {
-            StatusText.Text =
-                $"Status: Launch failed. {exception.Message}";
-        }
+        SetStatus(
+            $"Removed the cover for {selectedGame.Name}.");
     }
 
     private void RemoveButton_Click(
@@ -313,6 +285,7 @@ public partial class MainWindow : Window
 
         if (selectedGame is null)
         {
+            SetStatus("Select a game first.");
             return;
         }
 
@@ -325,19 +298,22 @@ public partial class MainWindow : Window
 
         if (_games.Count > 0)
         {
-            GameList.SelectedIndex = 0;
+            _viewModel.SelectedGame = _games[0];
+            GameList.SelectedItem = _games[0];
         }
         else
         {
+            _viewModel.SelectedGame = null;
             ClearSelectedGame();
         }
 
-        SetStatus($"Removed {removedGameName} from the library.");
+        SetStatus(
+            $"Removed {removedGameName} from the library.");
     }
 
     private Game? GetSelectedGame()
     {
-        return GameList.SelectedItem as Game;
+        return _viewModel.SelectedGame;
     }
 
     private void SaveLibrary()
@@ -347,38 +323,31 @@ public partial class MainWindow : Window
 
         if (!savedSuccessfully)
         {
-            StatusText.Text =
-                "Status: NovaLauncher could not save the library.";
+            SetStatus(
+                "NovaLauncher could not save the library.");
         }
     }
 
     private void UpdateLibraryCount()
     {
-        string gameWord =
-            _games.Count == 1 ? "game" : "games";
-
-        LibraryCountText.Text =
-            $"{_games.Count} {gameWord}";
+        _viewModel.UpdateLibraryCount();
     }
 
     private void ClearSelectedGame()
     {
-        GameNameTextBox.Text = string.Empty;
-        GameNameTextBox.IsEnabled = false;
+        _viewModel.SelectedGame = null;
 
-        SelectedGamePathText.Text =
-            "Choose a game from your library.";
+        GameNameTextBox.IsEnabled = false;
+        SaveNameButton.IsEnabled = false;
+        ChooseCoverButton.IsEnabled = false;
+        RemoveCoverButton.IsEnabled = false;
+        RemoveButton.IsEnabled = false;
 
         CoverImage.Source = null;
         CoverImage.IsVisible = false;
         CoverPlaceholder.IsVisible = true;
-
-        SaveNameButton.IsEnabled = false;
-        ChooseCoverButton.IsEnabled = false;
-        RemoveCoverButton.IsEnabled = false;
-        LaunchButton.IsEnabled = false;
-        RemoveButton.IsEnabled = false;
     }
+
     private void SetStatus(string message)
     {
         _viewModel.StatusText = $"Status: {message}";

@@ -242,11 +242,11 @@
 							BorderThickness="1"
 							CornerRadius="8">
 
-							<TextBlock
-								x:Name="StatusText"
-								Foreground="#C8D1E0"
-								Text="{Binding StatusText}"
-								TextWrapping="Wrap" />
+						<TextBlock
+							Foreground="#C8D1E0"
+							Text="{Binding StatusText}"
+							TextWrapping="Wrap" />
+						
 					</Border>
 
 					<!-- Game actions -->
@@ -257,12 +257,8 @@
 
 						<Button
 							x:Name="LaunchButton"
-							Grid.Column="0"
-							Padding="20,13"
-							HorizontalAlignment="Stretch"
-							Click="LaunchButton_Click"
-							Content="Launch Game"
-							IsEnabled="False" />
+							Content="Launch"
+							Command="{Binding LaunchGameCommand}" />
 
 						<Button
 							x:Name="RemoveButton"
