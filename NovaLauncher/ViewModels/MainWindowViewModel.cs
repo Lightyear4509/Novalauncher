@@ -110,6 +110,31 @@ public partial class MainWindowViewModel : ObservableObject
         StatusText =
             $"Status: Renamed game to {gameToRename.Name}.";
     }
+    
+    [RelayCommand]
+    private void RemoveCover()
+    {
+        Game? selectedGame = SelectedGame;
+
+        if (selectedGame is null)
+        {
+            StatusText = "Status: Select a game first.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedGame.CoverImagePath))
+        {
+            StatusText = "Status: This game does not have a cover.";
+            return;
+        }
+
+        selectedGame.CoverImagePath = null;
+
+        SaveLibrary();
+
+        StatusText =
+            $"Status: Removed the cover for {selectedGame.Name}.";
+    }
 
     [RelayCommand]
     private async Task ChooseCover()

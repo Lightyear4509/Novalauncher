@@ -109,27 +109,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void RemoveCoverButton_Click(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        Game? selectedGame = GetSelectedGame();
-
-        if (selectedGame is null)
-        {
-            SetStatus("Select a game first.");
-            return;
-        }
-
-        selectedGame.CoverImagePath = null;
-
-        SaveLibrary();
-        DisplayCover(selectedGame);
-
-        SetStatus(
-            $"Removed the cover for {selectedGame.Name}.");
-    }
-
     private Game? GetSelectedGame()
     {
         return _viewModel.SelectedGame;
