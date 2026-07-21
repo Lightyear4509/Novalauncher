@@ -1,6 +1,8 @@
 <Window
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:viewModels="using:NovaLauncher.ViewModels"
+	x:DataType="viewModels:MainWindowViewModel"
 	xmlns:models="using:NovaLauncher.Models"
     x:Class="NovaLauncher.Views.MainWindow"
     Title="NovaLauncher"
@@ -78,6 +80,8 @@
                         Grid.Row="1"
                         Background="Transparent"
                         BorderThickness="0"
+						ItemsSource="{Binding Games}"
+						SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
                         SelectionChanged="GameList_SelectionChanged">
 
 						<ListBox.ItemTemplate>

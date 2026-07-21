@@ -10,6 +10,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Media.Imaging;
 using NovaLauncher.Models;
 using NovaLauncher.Services;
+using NovaLauncher.ViewModels;
 
 namespace NovaLauncher.Views;
 
@@ -17,24 +18,25 @@ public partial class MainWindow : Window
 {
     private readonly GameLibraryService _libraryService;
     private readonly ObservableCollection<Game> _games;
+    private readonly MainWindowViewModel _viewModel;
 
     public MainWindow()
     {
         InitializeComponent();
 
+        _viewModel = new MainWindowViewModel();
+        DataContext = _viewModel;
+
         _libraryService = new GameLibraryService();
 
-        List<Game> savedGames = _libraryService.LoadGames();
-
-        _games = new ObservableCollection<Game>(savedGames);
-
-        GameList.ItemsSource = _games;
+        // Temporarily keep this alias so the existing event handlers
+        // continue working during the refactor.
+        _games = _viewModel.Games;
 
         UpdateLibraryCount();
 
         if (_games.Count > 0)
         {
-            GameList.SelectedIndex = 0;
             StatusText.Text = "Status: Saved library loaded.";
         }
     }
