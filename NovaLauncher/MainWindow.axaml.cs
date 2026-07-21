@@ -135,7 +135,6 @@ public partial class MainWindow : Window
         GameNameTextBox.IsEnabled = true;
         SaveNameButton.IsEnabled = true;
         ChooseCoverButton.IsEnabled = true;
-        RemoveButton.IsEnabled = true;
 
         DisplayCover(selectedGame);
 
@@ -277,40 +276,6 @@ public partial class MainWindow : Window
             $"Removed the cover for {selectedGame.Name}.");
     }
 
-    private void RemoveButton_Click(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        Game? selectedGame = GetSelectedGame();
-
-        if (selectedGame is null)
-        {
-            SetStatus("Select a game first.");
-            return;
-        }
-
-        string removedGameName = selectedGame.Name;
-
-        _games.Remove(selectedGame);
-
-        SaveLibrary();
-        UpdateLibraryCount();
-
-        if (_games.Count > 0)
-        {
-            _viewModel.SelectedGame = _games[0];
-            GameList.SelectedItem = _games[0];
-        }
-        else
-        {
-            _viewModel.SelectedGame = null;
-            ClearSelectedGame();
-        }
-
-        SetStatus(
-            $"Removed {removedGameName} from the library.");
-    }
-
     private Game? GetSelectedGame()
     {
         return _viewModel.SelectedGame;
@@ -341,7 +306,6 @@ public partial class MainWindow : Window
         SaveNameButton.IsEnabled = false;
         ChooseCoverButton.IsEnabled = false;
         RemoveCoverButton.IsEnabled = false;
-        RemoveButton.IsEnabled = false;
 
         CoverImage.Source = null;
         CoverImage.IsVisible = false;

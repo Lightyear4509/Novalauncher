@@ -114,6 +114,38 @@ public partial class MainWindowViewModel : ObservableObject
         StatusText =
             $"Status: Renamed game to {gameToRename.Name}.";
     }
+
+    [RelayCommand]
+    private void RemoveGame()
+    {
+        Game? gameToRemove = SelectedGame;
+
+        if (gameToRemove is null)
+        {
+            StatusText = "Status: Select a game first.";
+            return;
+        }
+
+        string removedGameName = gameToRemove.Name;
+
+        Games.Remove(gameToRemove);
+
+        if (Games.Count > 0)
+        {
+            SelectedGame = Games[0];
+        }
+        else
+        {
+            SelectedGame = null;
+        }
+
+        SaveLibrary();
+        UpdateLibraryCount();
+
+        StatusText =
+            $"Status: Removed {removedGameName} from the library.";
+    }
+
     [RelayCommand]
     private void LaunchGame()
     {

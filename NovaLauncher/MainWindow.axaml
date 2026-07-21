@@ -232,23 +232,6 @@
 
 					</Grid>
 
-					<Border
-							Grid.Row="4"
-							Margin="0,18,0,0"
-							Padding="12"
-							VerticalAlignment="Top"
-							Background="#202632"
-							BorderBrush="#303747"
-							BorderThickness="1"
-							CornerRadius="8">
-
-						<TextBlock
-							Foreground="#C8D1E0"
-							Text="{Binding StatusText}"
-							TextWrapping="Wrap" />
-						
-					</Border>
-
 					<!-- Game actions -->
 					<Grid
 						Grid.Row="5"
@@ -261,13 +244,11 @@
 							Command="{Binding LaunchGameCommand}" />
 
 						<Button
-							x:Name="RemoveButton"
 							Grid.Column="1"
 							Margin="12,0,0,0"
 							Padding="20,13"
-							Click="RemoveButton_Click"
-							Content="Remove"
-							IsEnabled="False" />
+							Command="{Binding RemoveGameCommand}"
+							Content="Remove" />
 
 					</Grid>
 				</Grid>
