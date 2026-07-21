@@ -18,6 +18,13 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IFileDialogService _fileDialogService;
 
     public ObservableCollection<Game> Games { get; }
+    public string[] SortOptions { get; } =
+{
+    "Name: A-Z",
+    "Name: Z-A",
+    "Recently Added",
+    "Oldest Added"
+};
     public ObservableCollection<Game> FilteredGames { get; }
 
     [ObservableProperty]
@@ -38,6 +45,9 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string libraryCount = "0 games";
+    
+    [ObservableProperty]
+    private string selectedSortOption = "Name: A-Z";
 
     public MainWindowViewModel(
     IFileDialogService fileDialogService)
@@ -56,7 +66,9 @@ public partial class MainWindowViewModel : ObservableObject
             }
         }
 
-        FilteredGames = new ObservableCollection<Game>(Games);
+        FilteredGames = new ObservableCollection<Game>();
+
+        RefreshFilteredGames();
 
         UpdateLibraryCount();
 
@@ -65,6 +77,11 @@ public partial class MainWindowViewModel : ObservableObject
             SelectedGame = Games[0];
             StatusText = "Status: Saved library loaded.";
         }
+    }
+
+    partial void OnSelectedSortOptionChanged(string value)
+    {
+        RefreshFilteredGames();
     }
 
     partial void OnSearchTextChanged(string value)
@@ -345,11 +362,26 @@ public partial class MainWindowViewModel : ObservableObject
 
         if (!string.IsNullOrWhiteSpace(searchQuery))
         {
-            matchingGames = Games.Where(game =>
+            matchingGames = matchingGames.Where(game =>
                 game.Name.Contains(
                     searchQuery,
                     StringComparison.OrdinalIgnoreCase));
         }
+
+        matchingGames = SelectedSortOption switch
+        {
+            "Name: Z-A" =>
+                matchingGames.OrderByDescending(game => game.Name),
+
+            "Recently Added" =>
+                matchingGames.OrderByDescending(game => game.AddedAt),
+
+            "Oldest Added" =>
+                matchingGames.OrderBy(game => game.AddedAt),
+
+            _ =>
+                matchingGames.OrderBy(game => game.Name)
+        };
 
         foreach (Game game in matchingGames)
         {
