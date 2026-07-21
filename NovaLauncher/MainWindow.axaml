@@ -134,7 +134,7 @@
 				BorderThickness="1"
 				CornerRadius="12">
 
-				<Grid RowDefinitions="260,Auto,Auto,Auto,*,Auto">
+				<Grid RowDefinitions="260,Auto,Auto,Auto,Auto,Auto">
 
 					<!-- Cover preview -->
 					<Border
@@ -216,7 +216,7 @@
 							Grid.Column="1"
 							Margin="10,0,0,0"
 							Padding="16,9"
-							Click="ChooseCoverButton_Click"
+							Command="{Binding ChooseCoverCommand}"
 							Content="Choose Cover"
 							IsEnabled="False" />
 
@@ -231,6 +231,22 @@
 							IsEnabled="False" />
 
 					</Grid>
+
+						<Border
+							Grid.Row="4"
+							Margin="0,18,0,0"
+							Padding="12"
+							Background="#202632"
+							BorderBrush="#303747"
+							BorderThickness="1"
+							CornerRadius="8">
+
+						<TextBlock
+							Foreground="#C8D1E0"
+							Text="{Binding StatusText}"
+							TextWrapping="Wrap" />
+
+					</Border>
 
 					<!-- Game actions -->
 					<Grid

@@ -112,6 +112,44 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task ChooseCover()
+    {
+        Game? selectedGame = SelectedGame;
+
+        if (selectedGame is null)
+        {
+            StatusText = "Status: Select a game first.";
+            return;
+        }
+
+        try
+        {
+            string? imagePath =
+                await _fileDialogService.PickCoverImageAsync();
+
+            if (string.IsNullOrWhiteSpace(imagePath))
+            {
+                StatusText =
+                    "Status: No cover image was selected.";
+
+                return;
+            }
+
+            selectedGame.CoverImagePath = imagePath;
+
+            SaveLibrary();
+
+            StatusText =
+                $"Status: Cover updated for {selectedGame.Name}.";
+        }
+        catch (Exception exception)
+        {
+            StatusText =
+                $"Status: Could not load the cover. {exception.Message}";
+        }
+    }
+
+    [RelayCommand]
     private void RemoveGame()
     {
         Game? gameToRemove = SelectedGame;
