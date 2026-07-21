@@ -78,8 +78,8 @@ public partial class MainWindow : Window
 
                 return;
             }
-
             bool alreadyExists = _games.Any(game =>
+                game is not null &&
                 string.Equals(
                     game.ExecutablePath,
                     executablePath,
@@ -140,42 +140,6 @@ public partial class MainWindow : Window
 
         StatusText.Text =
             $"Status: {selectedGame.Name} is selected.";
-    }
-
-    private void SaveNameButton_Click(
-    object? sender,
-    RoutedEventArgs e)
-    {
-        Game? selectedGame = GetSelectedGame();
-
-        if (selectedGame is null)
-        {
-            SetStatus("Select a game first.");
-            return;
-        }
-
-        string newName = GameNameTextBox.Text?.Trim() ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(newName))
-        {
-            StatusText.Text =
-                "Status: The game name cannot be empty.";
-
-            GameNameTextBox.Text = selectedGame.Name;
-            return;
-        }
-
-        selectedGame.Name = newName;
-
-        SaveLibrary();
-
-        // Refresh the ListBox because Game does not yet notify the UI
-        GameList.ItemsSource = null;
-        GameList.ItemsSource = _games;
-        GameList.SelectedItem = selectedGame;
-
-        StatusText.Text =
-            $"Status: Renamed game to {selectedGame.Name}.";
     }
 
     private async void ChooseCoverButton_Click(

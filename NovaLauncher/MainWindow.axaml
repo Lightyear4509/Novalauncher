@@ -207,7 +207,7 @@
 							x:Name="SaveNameButton"
 							Grid.Column="0"
 							Padding="16,9"
-							Click="SaveNameButton_Click"
+							Command="{Binding SaveNameCommand}"
 							Content="Save Name"
 							IsEnabled="False" />
 
