@@ -41,11 +41,11 @@
                     Text="Your personal game library" />
 
 				<Button
-                    Grid.Column="2"
-                    Padding="18,10"
-                    VerticalAlignment="Center"
-                    Click="AddGameButton_Click"
-                    Content="+ Add Game" />
+					Grid.Column="2"
+					Padding="18,10"
+					VerticalAlignment="Center"
+					Command="{Binding AddGameCommand}"
+					Content="+ Add Game" />
 
 			</Grid>
 		</Border>

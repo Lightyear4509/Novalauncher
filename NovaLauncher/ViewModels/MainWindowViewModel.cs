@@ -1,17 +1,12 @@
-﻿using Avalonia.Controls;
-using Avalonia.Platform.Storage;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NovaLauncher.Models;
 using NovaLauncher.Services;
 using System;
-using System.Collections.Generic;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Threading.Tasks;
 
 namespace NovaLauncher.ViewModels;
@@ -19,6 +14,7 @@ namespace NovaLauncher.ViewModels;
 public partial class MainWindowViewModel : ObservableObject
 {
     private readonly GameLibraryService _libraryService;
+    private readonly IFileDialogService _fileDialogService;
 
     public ObservableCollection<Game> Games { get; }
 
@@ -38,15 +34,15 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string libraryCount = "0 games";
 
-    public MainWindowViewModel()
+    public MainWindowViewModel(
+    IFileDialogService fileDialogService)
     {
+        _fileDialogService = fileDialogService;
         _libraryService = new GameLibraryService();
 
         Games = new ObservableCollection<Game>(
             _libraryService.LoadGames());
 
-        // Remove any null entries that may exist in an older
-        // or malformed games.json file.
         for (int index = Games.Count - 1; index >= 0; index--)
         {
             if (Games[index] is null)
@@ -197,39 +193,16 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task AddGame(Window window)
+    private async Task AddGame()
     {
         try
         {
-            IReadOnlyList<IStorageFile> selectedFiles =
-                await window.StorageProvider.OpenFilePickerAsync(
-                    new FilePickerOpenOptions
-                    {
-                        Title = "Choose a game executable",
-                        AllowMultiple = false,
-                        FileTypeFilter =
-                        [
-                            new FilePickerFileType("Windows executable")
-                        {
-                            Patterns = ["*.exe"]
-                        }
-                        ]
-                    });
-
-            if (selectedFiles.Count == 0)
-            {
-                StatusText = "Status: No file was selected.";
-                return;
-            }
-
             string? executablePath =
-                selectedFiles[0].TryGetLocalPath();
+                await _fileDialogService.PickExecutableAsync();
 
             if (string.IsNullOrWhiteSpace(executablePath))
             {
-                StatusText =
-                    "Status: The selected file does not have a local path.";
-
+                StatusText = "Status: No file was selected.";
                 return;
             }
 
@@ -250,7 +223,9 @@ public partial class MainWindowViewModel : ObservableObject
 
             Game newGame = new()
             {
-                Name = Path.GetFileNameWithoutExtension(executablePath),
+                Name =
+                    Path.GetFileNameWithoutExtension(executablePath),
+
                 ExecutablePath = executablePath
             };
 
@@ -269,6 +244,7 @@ public partial class MainWindowViewModel : ObservableObject
                 $"Status: Could not add the game. {exception.Message}";
         }
     }
+
     private void SaveLibrary()
     {
         bool savedSuccessfully =

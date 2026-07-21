@@ -23,13 +23,15 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        _viewModel = new MainWindowViewModel();
+        IFileDialogService fileDialogService =
+            new FileDialogService(this);
+
+        _viewModel =
+            new MainWindowViewModel(fileDialogService);
+
         DataContext = _viewModel;
 
         _libraryService = new GameLibraryService();
-
-        // Temporary alias while the remaining event handlers
-        // are gradually moved into the ViewModel.
         _games = _viewModel.Games;
 
         UpdateLibraryCount();
@@ -37,84 +39,6 @@ public partial class MainWindow : Window
         if (_games.Count > 0)
         {
             SetStatus("Saved library loaded.");
-        }
-    }
-
-    private async void AddGameButton_Click(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        try
-        {
-            IReadOnlyList<IStorageFile> selectedFiles =
-                await StorageProvider.OpenFilePickerAsync(
-                    new FilePickerOpenOptions
-                    {
-                        Title = "Choose a game executable",
-                        AllowMultiple = false,
-                        FileTypeFilter =
-                        [
-                            new FilePickerFileType(
-                                "Windows executable")
-                            {
-                                Patterns = ["*.exe"]
-                            }
-                        ]
-                    });
-
-            if (selectedFiles.Count == 0)
-            {
-                SetStatus("No file was selected.");
-                return;
-            }
-
-            string? executablePath =
-                selectedFiles[0].TryGetLocalPath();
-
-            if (string.IsNullOrWhiteSpace(executablePath))
-            {
-                SetStatus(
-                    "The selected file does not have a local path.");
-
-                return;
-            }
-
-            bool alreadyExists = _games.Any(game =>
-                game is not null &&
-                string.Equals(
-                    game.ExecutablePath,
-                    executablePath,
-                    StringComparison.OrdinalIgnoreCase));
-
-            if (alreadyExists)
-            {
-                SetStatus(
-                    "That game is already in your library.");
-
-                return;
-            }
-
-            Game newGame = new()
-            {
-                Name =
-                    Path.GetFileNameWithoutExtension(executablePath),
-
-                ExecutablePath = executablePath
-            };
-
-            _games.Add(newGame);
-            _viewModel.SelectedGame = newGame;
-
-            SaveLibrary();
-            UpdateLibraryCount();
-
-            SetStatus(
-                $"Added {newGame.Name} to the library.");
-        }
-        catch (Exception exception)
-        {
-            SetStatus(
-                $"Could not add the game. {exception.Message}");
         }
     }
 
