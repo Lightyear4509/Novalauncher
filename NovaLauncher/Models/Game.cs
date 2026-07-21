@@ -1,16 +1,22 @@
 ﻿using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace NovaLauncher.Models;
 
-public class Game
+public partial class Game : ObservableObject
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    [ObservableProperty]
+    private Guid id = Guid.NewGuid();
 
-    public string Name { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string name = string.Empty;
 
-    public string ExecutablePath { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string executablePath = string.Empty;
 
-    public string? CoverImagePath { get; set; }
+    [ObservableProperty]
+    private DateTime addedAt = DateTime.Now;
 
-    public DateTime AddedAt { get; set; } = DateTime.Now;
+    [ObservableProperty]
+    private string? coverImagePath;
 }
