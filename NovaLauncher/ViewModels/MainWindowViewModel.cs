@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using NovaLauncher.Models;
 using NovaLauncher.Services;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -17,9 +18,13 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IFileDialogService _fileDialogService;
 
     public ObservableCollection<Game> Games { get; }
+    public ObservableCollection<Game> FilteredGames { get; }
 
     [ObservableProperty]
     private Game? selectedGame;
+
+    [ObservableProperty]
+    private string searchText = string.Empty;
 
     [ObservableProperty]
     private string statusText = "Status: Ready.";
@@ -51,6 +56,8 @@ public partial class MainWindowViewModel : ObservableObject
             }
         }
 
+        FilteredGames = new ObservableCollection<Game>(Games);
+
         UpdateLibraryCount();
 
         if (Games.Count > 0)
@@ -58,6 +65,11 @@ public partial class MainWindowViewModel : ObservableObject
             SelectedGame = Games[0];
             StatusText = "Status: Saved library loaded.";
         }
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        RefreshFilteredGames();
     }
 
     partial void OnSelectedGameChanged(Game? value)
@@ -104,6 +116,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
 
         gameToRename.Name = newName;
+        RefreshFilteredGames();
 
         SaveLibrary();
 
@@ -188,6 +201,7 @@ public partial class MainWindowViewModel : ObservableObject
         string removedGameName = gameToRemove.Name;
 
         Games.Remove(gameToRemove);
+        RefreshFilteredGames();
 
         if (Games.Count > 0)
         {
@@ -293,6 +307,8 @@ public partial class MainWindowViewModel : ObservableObject
             };
 
             Games.Add(newGame);
+            RefreshFilteredGames();
+
             SelectedGame = newGame;
 
             SaveLibrary();
@@ -317,6 +333,27 @@ public partial class MainWindowViewModel : ObservableObject
         {
             StatusText =
                 "Status: NovaLauncher could not save the library.";
+        }
+    }
+    private void RefreshFilteredGames()
+    {
+        FilteredGames.Clear();
+
+        string searchQuery = SearchText.Trim();
+
+        IEnumerable<Game> matchingGames = Games;
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            matchingGames = Games.Where(game =>
+                game.Name.Contains(
+                    searchQuery,
+                    StringComparison.OrdinalIgnoreCase));
+        }
+
+        foreach (Game game in matchingGames)
+        {
+            FilteredGames.Add(game);
         }
     }
 }

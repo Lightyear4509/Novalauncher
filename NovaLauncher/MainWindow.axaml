@@ -65,7 +65,7 @@
                 BorderThickness="1"
                 CornerRadius="12">
 
-				<Grid RowDefinitions="Auto,*,Auto">
+				<Grid RowDefinitions="Auto,Auto,*,Auto">
 
 					<TextBlock
                         Grid.Row="0"
@@ -74,13 +74,19 @@
                         FontWeight="Bold"
                         Foreground="White"
                         Text="Game Library" />
+					
+					<TextBox
+						Grid.Row="1"
+						Margin="0,0,0,12"
+						Watermark="Search games..."
+						Text="{Binding SearchText, Mode=TwoWay}" />
 
 					<ListBox
                         x:Name="GameList"
-                        Grid.Row="1"
+                        Grid.Row="2"
                         Background="Transparent"
                         BorderThickness="0"
-						ItemsSource="{Binding Games}"
+						ItemsSource="{Binding FilteredGames}"
 						SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
                         SelectionChanged="GameList_SelectionChanged">
 
@@ -116,7 +122,7 @@
 
 					<TextBlock
                         x:Name="LibraryCountText"
-                        Grid.Row="2"
+                        Grid.Row="3"
                         Margin="4,14,0,0"
                         Foreground="#98A2B3"
                         Text="{Binding LibraryCount}" />
