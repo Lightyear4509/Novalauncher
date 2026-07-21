@@ -84,8 +84,8 @@
 						<TextBox
 							Grid.Column="0"
 							Margin="0,0,10,0"
-							Watermark="Search games..."
-							Text="{Binding SearchText, Mode=TwoWay}" />
+							PlaceholderText="Search games..."
+							Text="{Binding SearchText}" />
 
 						<ComboBox
 							Grid.Column="1"
@@ -178,7 +178,7 @@
 						<TextBox
 							x:Name="GameNameTextBox"
 							FontSize="20"
-							Watermark="Game name"
+							PlaceholderText="Game name"
 							IsEnabled="False"
 							Text="{Binding GameName, Mode=TwoWay}" />
 
@@ -221,7 +221,7 @@
 							Margin="10,0,0,0"
 							Padding="16,9"
 							Command="{Binding ToggleFavoriteCommand}"
-							Content="★ Favorite" />
+							Content="{Binding FavoriteButtonText}" />
 
 						<Button
 							x:Name="RemoveCoverButton"

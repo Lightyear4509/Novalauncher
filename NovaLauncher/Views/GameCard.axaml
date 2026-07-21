@@ -5,38 +5,40 @@
     x:Class="NovaLauncher.Views.GameCard"
     x:DataType="models:Game">
 
-    <Border
+	<Border
         Margin="0,4"
         Padding="12"
         Background="#202632"
         CornerRadius="8">
 
-        <StackPanel Spacing="5">
+		<StackPanel Spacing="5">
 
-            <StackPanel
+			<StackPanel
                 Orientation="Horizontal"
                 Spacing="8">
 
 				<TextBlock
-	                 FontSize="16"
-	                 Foreground="Gold"
-	                 Text="★"
-	                 IsVisible="{Binding IsFavorite}" />
+                    FontSize="16"
+                    Foreground="Gold"
+                    IsVisible="{Binding IsFavorite}"
+                    Text="★" />
 
-                <TextBlock
+				<TextBlock
                     FontSize="17"
                     FontWeight="SemiBold"
                     Foreground="White"
                     Text="{Binding Name}" />
 
-            </StackPanel>
+			</StackPanel>
 
-            <TextBlock
+			<TextBlock
                 MaxWidth="300"
                 Foreground="#98A2B3"
                 Text="{Binding ExecutablePath}"
                 TextTrimming="CharacterEllipsis" />
 
-        </StackPanel>
-    </Border>
+		</StackPanel>
+
+	</Border>
+
 </UserControl>
