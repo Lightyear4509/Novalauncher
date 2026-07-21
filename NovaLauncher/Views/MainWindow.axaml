@@ -1,277 +1,356 @@
 <Window
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:views="using:NovaLauncher.Views"
-	xmlns:viewModels="using:NovaLauncher.ViewModels"
-	x:DataType="viewModels:MainWindowViewModel"
-	xmlns:models="using:NovaLauncher.Models"
+    xmlns:views="using:NovaLauncher.Views"
+    xmlns:viewModels="using:NovaLauncher.ViewModels"
+    xmlns:models="using:NovaLauncher.Models"
     x:Class="NovaLauncher.Views.MainWindow"
+    x:DataType="viewModels:MainWindowViewModel"
     Title="NovaLauncher"
-    Width="1050"
-    Height="680"
-    MinWidth="800"
-    MinHeight="520"
-    Background="#10131A">
+    Width="1180"
+    Height="720"
+    MinWidth="900"
+    MinHeight="600"
+    Background="#0E1117">
 
-	<Grid RowDefinitions="70,*">
+	<Grid ColumnDefinitions="210,*">
 
-		<!-- Header -->
+		<!-- Left sidebar -->
 		<Border
-            Grid.Row="0"
-            Background="#171B24"
+            Grid.Column="0"
+            Background="#151922"
             BorderBrush="#292F3D"
-            BorderThickness="0,0,0,1">
+            BorderThickness="0,0,1,0">
 
 			<Grid
-                Margin="24,0"
-                ColumnDefinitions="Auto,*,Auto">
+                Margin="18"
+                RowDefinitions="Auto,Auto,*,Auto">
 
-				<TextBlock
-                    Grid.Column="0"
-                    VerticalAlignment="Center"
-                    FontSize="24"
-                    FontWeight="Bold"
-                    Foreground="White"
-                    Text="NovaLauncher" />
+				<!-- App title -->
+				<StackPanel
+                    Grid.Row="0"
+                    Margin="4,8,4,28"
+                    Spacing="4">
 
-				<TextBlock
-                    Grid.Column="1"
-                    Margin="35,0,0,0"
-                    VerticalAlignment="Center"
-                    Foreground="#98A2B3"
-                    Text="Your personal game library" />
+					<TextBlock
+                        FontSize="24"
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="NovaLauncher" />
 
-				<Button
-					Grid.Column="2"
-					Padding="18,10"
-					VerticalAlignment="Center"
-					Command="{Binding AddGameCommand}"
-					Content="+ Add Game" />
+					<TextBlock
+                        FontSize="12"
+                        Foreground="#7F8A9A"
+                        Text="Game Library" />
+
+				</StackPanel>
+
+				<!-- Navigation -->
+				<StackPanel
+                    Grid.Row="1"
+                    Spacing="8">
+
+					<Button
+                        Padding="14,11"
+                        HorizontalContentAlignment="Left"
+                        Content="🎮  Library" />
+
+					<Button
+                        Padding="14,11"
+                        HorizontalContentAlignment="Left"
+                        Content="★  Favorites" />
+
+					<Button
+                        Padding="14,11"
+                        HorizontalContentAlignment="Left"
+                        Content="◷  Recently Added" />
+
+				</StackPanel>
+
+				<!-- Bottom navigation -->
+				<StackPanel
+                    Grid.Row="3"
+                    Spacing="8">
+
+					<Button
+                        Padding="14,11"
+                        HorizontalContentAlignment="Left"
+                        Content="⚙  Settings" />
+
+					<TextBlock
+                        Margin="8,8,0,0"
+                        FontSize="11"
+                        Foreground="#667085"
+                        Text="NovaLauncher v0.1" />
+
+				</StackPanel>
 
 			</Grid>
 		</Border>
 
-		<!-- Main content -->
+		<!-- Main application area -->
 		<Grid
-            Grid.Row="1"
-            Margin="24"
-            ColumnDefinitions="360,*">
+            Grid.Column="1"
+            RowDefinitions="76,*">
 
-			<!-- Library -->
+			<!-- Top toolbar -->
 			<Border
-                Grid.Column="0"
-                Padding="16"
+                Grid.Row="0"
                 Background="#171B24"
-                BorderBrush="#303747"
-                BorderThickness="1"
-                CornerRadius="12">
+                BorderBrush="#292F3D"
+                BorderThickness="0,0,0,1">
 
-				<Grid RowDefinitions="Auto,Auto,*,Auto">
+				<Grid
+                    Margin="24,0"
+                    ColumnDefinitions="Auto,*,220,160,Auto">
 
-					<TextBlock
-						Grid.Row="0"
-						Margin="4,0,0,14"
-						FontSize="20"
-						FontWeight="Bold"
-						Foreground="White"
-						Text="Game Library" />
-
-					<Grid
-						Grid.Row="1"
-						Margin="0,0,0,12"
-						ColumnDefinitions="*,150">
-
-						<TextBox
-							Grid.Column="0"
-							Margin="0,0,10,0"
-							PlaceholderText="Search games..."
-							Text="{Binding SearchText}" />
-
-						<ComboBox
-							Grid.Column="1"
-							ItemsSource="{Binding SortOptions}"
-							SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}" />
-					</Grid>
-
-					<ListBox
-                        x:Name="GameList"
-                        Grid.Row="2"
-                        Background="Transparent"
-                        BorderThickness="0"
-						ItemsSource="{Binding FilteredGames}"
-						SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
-                        SelectionChanged="GameList_SelectionChanged">
-
-						<ListBox.ItemTemplate>
-							<DataTemplate x:DataType="models:Game">
-								<views:GameCard />
-							</DataTemplate>
-						</ListBox.ItemTemplate>
-						
-					</ListBox>
-
-					<TextBlock
-                        x:Name="LibraryCountText"
-                        Grid.Row="3"
-                        Margin="4,14,0,0"
-                        Foreground="#98A2B3"
-                        Text="{Binding LibraryCount}" />
-
-				</Grid>
-			</Border>
-
-			<!-- Selected game details -->
-			<Border
-				Grid.Column="1"
-				Margin="24,0,0,0"
-				Padding="30"
-				Background="#171B24"
-				BorderBrush="#303747"
-				BorderThickness="1"
-				CornerRadius="12">
-
-				<Grid RowDefinitions="260,Auto,Auto,Auto,Auto,Auto">
-
-					<!-- Cover preview -->
-					<Border
-						Grid.Row="0"
-						Background="#252C39"
-						CornerRadius="10"
-						ClipToBounds="True">
-
-						<Grid>
-							<StackPanel
-								x:Name="CoverPlaceholder"
-								HorizontalAlignment="Center"
-								VerticalAlignment="Center"
-								Spacing="10">
-
-								<TextBlock
-									HorizontalAlignment="Center"
-									FontSize="70"
-									Text="🎮" />
-
-								<TextBlock
-									Foreground="#98A2B3"
-									Text="No cover selected" />
-
-							</StackPanel>
-
-							<Image
-								x:Name="CoverImage"
-								IsVisible="False"
-								Stretch="UniformToFill" />
-						</Grid>
-					</Border>
-
-					<!-- Editable name -->
 					<StackPanel
-						Grid.Row="1"
-						Margin="0,22,0,0"
-						Spacing="7">
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Spacing="2">
 
 						<TextBlock
-							FontWeight="SemiBold"
-							Foreground="#98A2B3"
-							Text="Display name" />
+                            FontSize="21"
+                            FontWeight="Bold"
+                            Foreground="White"
+                            Text="Library" />
 
-						<TextBox
-							x:Name="GameNameTextBox"
-							FontSize="20"
-							PlaceholderText="Game name"
-							IsEnabled="False"
-							Text="{Binding GameName, Mode=TwoWay}" />
+						<TextBlock
+                            FontSize="12"
+                            Foreground="#98A2B3"
+                            Text="{Binding LibraryCount}" />
 
 					</StackPanel>
 
-					<!-- Executable path -->
-					<TextBlock
-						x:Name="SelectedGamePathText"
-						Grid.Row="2"
-						Margin="0,14,0,0"
-						Foreground="#AAB3C2"
-						Text="{Binding SelectedGamePath}"
-						TextWrapping="Wrap" />
+					<TextBox
+                        Grid.Column="2"
+                        Margin="0,0,12,0"
+                        VerticalAlignment="Center"
+                        PlaceholderText="Search games..."
+                        Text="{Binding SearchText}" />
 
-					<!-- Editing buttons -->
-					<Grid
-						Grid.Row="3"
-						Margin="0,16,0,0"
-						ColumnDefinitions="Auto,Auto,Auto,*">
+					<ComboBox
+                        Grid.Column="3"
+                        Margin="0,0,12,0"
+                        VerticalAlignment="Center"
+                        ItemsSource="{Binding SortOptions}"
+                        SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}" />
 
-						<Button
-							x:Name="SaveNameButton"
-							Grid.Column="0"
-							Padding="16,9"
-							Command="{Binding SaveNameCommand}"
-							Content="Save Name"
-							IsEnabled="False" />
+					<Button
+                        Grid.Column="4"
+                        Padding="18,10"
+                        VerticalAlignment="Center"
+                        Command="{Binding AddGameCommand}"
+                        Content="+ Add Game" />
 
-						<Button
-							x:Name="ChooseCoverButton"
-							Grid.Column="1"
-							Margin="10,0,0,0"
-							Padding="16,9"
-							Command="{Binding ChooseCoverCommand}"
-							Content="Choose Cover"
-							IsEnabled="False" />
-
-						<Button
-							Grid.Column="2"
-							Margin="10,0,0,0"
-							Padding="16,9"
-							Command="{Binding ToggleFavoriteCommand}"
-							Content="{Binding FavoriteButtonText}" />
-
-						<Button
-							x:Name="RemoveCoverButton"
-							Grid.Column="3"
-							Margin="10,0,0,0"
-							Padding="16,9"
-							HorizontalAlignment="Left"
-							Command="{Binding RemoveCoverCommand}"
-							Content="Remove Cover"
-							IsEnabled="False" />
-
-					</Grid>
-
-						<Border
-							Grid.Row="4"
-							Margin="0,18,0,0"
-							Padding="12"
-							Background="#202632"
-							BorderBrush="#303747"
-							BorderThickness="1"
-							CornerRadius="8">
-
-						<TextBlock
-							Foreground="#C8D1E0"
-							Text="{Binding StatusText}"
-							TextWrapping="Wrap" />
-
-					</Border>
-
-					<!-- Game actions -->
-					<Grid
-						Grid.Row="5"
-						Margin="0,24,0,0"
-						ColumnDefinitions="*,Auto">
-
-						<Button
-							x:Name="LaunchButton"
-							Content="Launch"
-							Command="{Binding LaunchGameCommand}" />
-
-						<Button
-							Grid.Column="1"
-							Margin="12,0,0,0"
-							Padding="20,13"
-							Command="{Binding RemoveGameCommand}"
-							Content="Remove" />
-
-					</Grid>
 				</Grid>
 			</Border>
+
+			<!-- Library content -->
+			<Grid
+                Grid.Row="1"
+                Margin="24"
+                ColumnDefinitions="360,*">
+
+				<!-- Game list -->
+				<Border
+                    Grid.Column="0"
+                    Padding="16"
+                    Background="#171B24"
+                    BorderBrush="#303747"
+                    BorderThickness="1"
+                    CornerRadius="12">
+
+					<Grid RowDefinitions="Auto,*,Auto">
+
+						<TextBlock
+                            Grid.Row="0"
+                            Margin="4,0,0,14"
+                            FontSize="18"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="All Games" />
+
+						<ListBox
+                            x:Name="GameList"
+                            Grid.Row="1"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ItemsSource="{Binding FilteredGames}"
+                            SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
+                            SelectionChanged="GameList_SelectionChanged">
+
+							<ListBox.ItemTemplate>
+								<DataTemplate x:DataType="models:Game">
+									<views:GameCard />
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+
+						</ListBox>
+
+						<TextBlock
+                            Grid.Row="2"
+                            Margin="4,14,0,0"
+                            Foreground="#98A2B3"
+                            Text="{Binding LibraryCount}" />
+
+					</Grid>
+				</Border>
+
+				<!-- Selected game details -->
+				<Border
+                    Grid.Column="1"
+                    Margin="24,0,0,0"
+                    Padding="30"
+                    Background="#171B24"
+                    BorderBrush="#303747"
+                    BorderThickness="1"
+                    CornerRadius="12">
+
+					<Grid RowDefinitions="260,Auto,Auto,Auto,Auto,Auto">
+
+						<!-- Cover preview -->
+						<Border
+                            Grid.Row="0"
+                            Background="#252C39"
+                            CornerRadius="10"
+                            ClipToBounds="True">
+
+							<Grid>
+
+								<StackPanel
+                                    x:Name="CoverPlaceholder"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Spacing="10">
+
+									<TextBlock
+                                        HorizontalAlignment="Center"
+                                        FontSize="70"
+                                        Text="🎮" />
+
+									<TextBlock
+                                        Foreground="#98A2B3"
+                                        Text="No cover selected" />
+
+								</StackPanel>
+
+								<Image
+                                    x:Name="CoverImage"
+                                    IsVisible="False"
+                                    Stretch="UniformToFill" />
+
+							</Grid>
+						</Border>
+
+						<!-- Editable game name -->
+						<StackPanel
+                            Grid.Row="1"
+                            Margin="0,22,0,0"
+                            Spacing="7">
+
+							<TextBlock
+                                FontWeight="SemiBold"
+                                Foreground="#98A2B3"
+                                Text="Display name" />
+
+							<TextBox
+                                x:Name="GameNameTextBox"
+                                FontSize="20"
+                                PlaceholderText="Game name"
+                                IsEnabled="False"
+                                Text="{Binding GameName, Mode=TwoWay}" />
+
+						</StackPanel>
+
+						<!-- Executable path -->
+						<TextBlock
+                            Grid.Row="2"
+                            Margin="0,14,0,0"
+                            Foreground="#AAB3C2"
+                            Text="{Binding SelectedGamePath}"
+                            TextWrapping="Wrap" />
+
+						<!-- Editing buttons -->
+						<WrapPanel
+                            Grid.Row="3"
+                            Margin="0,16,0,0"
+                            Orientation="Horizontal">
+
+							<Button
+                                x:Name="SaveNameButton"
+                                Margin="0,0,10,10"
+                                Padding="16,9"
+                                Command="{Binding SaveNameCommand}"
+                                Content="Save Name"
+                                IsEnabled="False" />
+
+							<Button
+                                x:Name="ChooseCoverButton"
+                                Margin="0,0,10,10"
+                                Padding="16,9"
+                                Command="{Binding ChooseCoverCommand}"
+                                Content="Choose Cover"
+                                IsEnabled="False" />
+
+							<Button
+                                Margin="0,0,10,10"
+                                Padding="16,9"
+                                Command="{Binding ToggleFavoriteCommand}"
+                                Content="{Binding FavoriteButtonText}" />
+
+							<Button
+                                x:Name="RemoveCoverButton"
+                                Margin="0,0,10,10"
+                                Padding="16,9"
+                                Command="{Binding RemoveCoverCommand}"
+                                Content="Remove Cover"
+                                IsEnabled="False" />
+
+						</WrapPanel>
+
+						<!-- Status -->
+						<Border
+                            Grid.Row="4"
+                            Margin="0,18,0,0"
+                            Padding="12"
+                            Background="#202632"
+                            BorderBrush="#303747"
+                            BorderThickness="1"
+                            CornerRadius="8">
+
+							<TextBlock
+                                Foreground="#C8D1E0"
+                                Text="{Binding StatusText}"
+                                TextWrapping="Wrap" />
+
+						</Border>
+
+						<!-- Game actions -->
+						<Grid
+                            Grid.Row="5"
+                            Margin="0,24,0,0"
+                            ColumnDefinitions="*,Auto">
+
+							<Button
+                                Grid.Column="0"
+                                Padding="20,13"
+                                Command="{Binding LaunchGameCommand}"
+                                Content="▶ Play" />
+
+							<Button
+                                Grid.Column="1"
+                                Margin="12,0,0,0"
+                                Padding="20,13"
+                                Command="{Binding RemoveGameCommand}"
+                                Content="Remove" />
+
+						</Grid>
+
+					</Grid>
+				</Border>
+
+			</Grid>
 		</Grid>
 	</Grid>
 </Window>
