@@ -7,6 +7,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Media.Imaging;
 using NovaLauncher.Models;
 using NovaLauncher.Services;
 
@@ -114,8 +115,8 @@ public partial class MainWindow : Window
     }
 
     private void GameList_SelectionChanged(
-        object? sender,
-        SelectionChangedEventArgs e)
+    object? sender,
+    SelectionChangedEventArgs e)
     {
         Game? selectedGame = GetSelectedGame();
 
@@ -125,14 +126,175 @@ public partial class MainWindow : Window
             return;
         }
 
-        SelectedGameTitleText.Text = selectedGame.Name;
+        GameNameTextBox.Text = selectedGame.Name;
         SelectedGamePathText.Text = selectedGame.ExecutablePath;
 
+        GameNameTextBox.IsEnabled = true;
+        SaveNameButton.IsEnabled = true;
+        ChooseCoverButton.IsEnabled = true;
         LaunchButton.IsEnabled = true;
         RemoveButton.IsEnabled = true;
 
+        DisplayCover(selectedGame);
+
         StatusText.Text =
             $"Status: {selectedGame.Name} is selected.";
+    }
+
+    private void SaveNameButton_Click(
+    object? sender,
+    RoutedEventArgs e)
+    {
+        Game? selectedGame = GetSelectedGame();
+
+        if (selectedGame is null)
+        {
+            StatusText.Text = "Status: Select a game first.";
+            return;
+        }
+
+        string newName = GameNameTextBox.Text?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            StatusText.Text =
+                "Status: The game name cannot be empty.";
+
+            GameNameTextBox.Text = selectedGame.Name;
+            return;
+        }
+
+        selectedGame.Name = newName;
+
+        SaveLibrary();
+
+        // Refresh the ListBox because Game does not yet notify the UI
+        GameList.ItemsSource = null;
+        GameList.ItemsSource = _games;
+        GameList.SelectedItem = selectedGame;
+
+        StatusText.Text =
+            $"Status: Renamed game to {selectedGame.Name}.";
+    }
+
+    private async void ChooseCoverButton_Click(
+    object? sender,
+    RoutedEventArgs e)
+    {
+        Game? selectedGame = GetSelectedGame();
+
+        if (selectedGame is null)
+        {
+            StatusText.Text = "Status: Select a game first.";
+            return;
+        }
+
+        try
+        {
+            IReadOnlyList<IStorageFile> selectedFiles =
+                await StorageProvider.OpenFilePickerAsync(
+                    new FilePickerOpenOptions
+                    {
+                        Title = "Choose cover image",
+                        AllowMultiple = false,
+                        FileTypeFilter =
+                        [
+                            new FilePickerFileType("Image files")
+                        {
+                            Patterns =
+                            [
+                                "*.png",
+                                "*.jpg",
+                                "*.jpeg",
+                                "*.webp",
+                                "*.bmp"
+                            ]
+                        }
+                        ]
+                    });
+
+            if (selectedFiles.Count == 0)
+            {
+                StatusText.Text =
+                    "Status: No cover image was selected.";
+
+                return;
+            }
+
+            string? imagePath =
+                selectedFiles[0].TryGetLocalPath();
+
+            if (string.IsNullOrWhiteSpace(imagePath))
+            {
+                StatusText.Text =
+                    "Status: The image does not have a local path.";
+
+                return;
+            }
+
+            selectedGame.CoverImagePath = imagePath;
+
+            SaveLibrary();
+            DisplayCover(selectedGame);
+
+            StatusText.Text =
+                $"Status: Cover updated for {selectedGame.Name}.";
+        }
+        catch (Exception exception)
+        {
+            StatusText.Text =
+                $"Status: Could not load the cover. {exception.Message}";
+        }
+    }
+    private void DisplayCover(Game game)
+    {
+        CoverImage.Source = null;
+
+        bool validCover =
+            !string.IsNullOrWhiteSpace(game.CoverImagePath) &&
+            File.Exists(game.CoverImagePath);
+
+        if (!validCover)
+        {
+            CoverImage.IsVisible = false;
+            CoverPlaceholder.IsVisible = true;
+            RemoveCoverButton.IsEnabled = false;
+            return;
+        }
+
+        try
+        {
+            CoverImage.Source = new Bitmap(game.CoverImagePath!);
+            CoverImage.IsVisible = true;
+            CoverPlaceholder.IsVisible = false;
+            RemoveCoverButton.IsEnabled = true;
+        }
+        catch
+        {
+            CoverImage.IsVisible = false;
+            CoverPlaceholder.IsVisible = true;
+            RemoveCoverButton.IsEnabled = false;
+        }
+    }
+
+    private void RemoveCoverButton_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        Game? selectedGame = GetSelectedGame();
+
+        if (selectedGame is null)
+        {
+            return;
+        }
+
+        selectedGame.CoverImagePath = null;
+
+        SaveLibrary();
+        DisplayCover(selectedGame);
+
+        StatusText.Text =
+            $"Status: Removed the cover for {selectedGame.Name}.";
     }
 
     private void LaunchButton_Click(
@@ -238,11 +400,19 @@ public partial class MainWindow : Window
 
     private void ClearSelectedGame()
     {
-        SelectedGameTitleText.Text = "Select a game";
+        GameNameTextBox.Text = string.Empty;
+        GameNameTextBox.IsEnabled = false;
 
         SelectedGamePathText.Text =
             "Choose a game from your library.";
 
+        CoverImage.Source = null;
+        CoverImage.IsVisible = false;
+        CoverPlaceholder.IsVisible = true;
+
+        SaveNameButton.IsEnabled = false;
+        ChooseCoverButton.IsEnabled = false;
+        RemoveCoverButton.IsEnabled = false;
         LaunchButton.IsEnabled = false;
         RemoveButton.IsEnabled = false;
     }

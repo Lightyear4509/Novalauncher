@@ -10,5 +10,7 @@ public class Game
 
     public string ExecutablePath { get; set; } = string.Empty;
 
+    public string? CoverImagePath { get; set; }
+
     public DateTime AddedAt { get; set; } = DateTime.Now;
 }
