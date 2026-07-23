@@ -53,16 +53,19 @@
 					<Button
                         Padding="14,11"
                         HorizontalContentAlignment="Left"
+                        Command="{Binding ShowLibraryCommand}"
                         Content="🎮  Library" />
 
 					<Button
                         Padding="14,11"
                         HorizontalContentAlignment="Left"
+                        Command="{Binding ShowFavoritesCommand}"
                         Content="★  Favorites" />
 
 					<Button
                         Padding="14,11"
                         HorizontalContentAlignment="Left"
+                        Command="{Binding ShowRecentlyAddedCommand}"
                         Content="◷  Recently Added" />
 
 				</StackPanel>
@@ -91,22 +94,21 @@
 		<!-- Main application area -->
 		<Grid
             Grid.Column="1"
-            RowDefinitions="76,*">
+            RowDefinitions="Auto,*">
 
 			<!-- Top toolbar -->
 			<Border
                 Grid.Row="0"
+                Padding="24,14"
                 Background="#171B24"
                 BorderBrush="#292F3D"
                 BorderThickness="0,0,0,1">
 
-				<Grid
-                    Margin="24,0"
-                    ColumnDefinitions="Auto,*,220,160,Auto">
+				<Grid RowDefinitions="Auto,Auto">
 
+					<!-- Library heading -->
 					<StackPanel
-                        Grid.Column="0"
-                        VerticalAlignment="Center"
+                        Grid.Row="0"
                         Spacing="2">
 
 						<TextBlock
@@ -122,26 +124,42 @@
 
 					</StackPanel>
 
-					<TextBox
-                        Grid.Column="2"
-                        Margin="0,0,12,0"
-                        VerticalAlignment="Center"
-                        PlaceholderText="Search games..."
-                        Text="{Binding SearchText}" />
+					<!-- Toolbar controls -->
+					<WrapPanel
+                        Grid.Row="1"
+                        Margin="0,14,0,0"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Left">
 
-					<ComboBox
-                        Grid.Column="3"
-                        Margin="0,0,12,0"
-                        VerticalAlignment="Center"
-                        ItemsSource="{Binding SortOptions}"
-                        SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}" />
+						<TextBox
+                            Width="220"
+                            Margin="0,0,12,8"
+                            VerticalAlignment="Center"
+                            PlaceholderText="Search games..."
+                            Text="{Binding SearchText}" />
 
-					<Button
-                        Grid.Column="4"
-                        Padding="18,10"
-                        VerticalAlignment="Center"
-                        Command="{Binding AddGameCommand}"
-                        Content="+ Add Game" />
+						<ComboBox
+                            Width="160"
+                            Margin="0,0,12,8"
+                            VerticalAlignment="Center"
+                            ItemsSource="{Binding SortOptions}"
+                            SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}" />
+
+						<Button
+                            Margin="0,0,12,8"
+                            Padding="18,10"
+                            VerticalAlignment="Center"
+                            Command="{Binding AddGameCommand}"
+                            Content="+ Add Game" />
+
+						<Button
+                            Margin="0,0,0,8"
+                            Padding="18,10"
+                            VerticalAlignment="Center"
+                            Command="{Binding ImportSteamGamesCommand}"
+                            Content="Import Steam" />
+
+					</WrapPanel>
 
 				</Grid>
 			</Border>
@@ -182,53 +200,59 @@
                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                             ScrollViewer.VerticalScrollBarVisibility="Auto">
 
-                            <ListBox.Styles>
+							<ListBox.Styles>
 
-                                <Style Selector="ListBoxItem">
-                                    <Setter Property="Padding" Value="0" />
-                                    <Setter Property="Margin" Value="0" />
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
-                                </Style>
+								<Style Selector="ListBoxItem">
+									<Setter Property="Padding" Value="0" />
+									<Setter Property="Margin" Value="0" />
+									<Setter Property="Background" Value="Transparent" />
+									<Setter
+                                        Property="HorizontalContentAlignment"
+                                        Value="Stretch" />
+									<Setter
+                                        Property="VerticalContentAlignment"
+                                        Value="Stretch" />
+								</Style>
 
-                                <Style Selector="ListBoxItem /template/ ContentPresenter">
-                                    <Setter Property="Padding" Value="0" />
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="BorderBrush" Value="Transparent" />
-                                    <Setter Property="BorderThickness" Value="2" />
-                                    <Setter Property="CornerRadius" Value="11" />
-                                </Style>
+								<Style Selector="ListBoxItem /template/ ContentPresenter">
+									<Setter Property="Padding" Value="0" />
+									<Setter Property="Background" Value="Transparent" />
+									<Setter Property="BorderBrush" Value="Transparent" />
+									<Setter Property="BorderThickness" Value="2" />
+									<Setter Property="CornerRadius" Value="11" />
+								</Style>
 
-                                <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="BorderBrush" Value="#596579" />
-                                </Style>
+								<Style
+                                    Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+									<Setter Property="Background" Value="Transparent" />
+									<Setter Property="BorderBrush" Value="#596579" />
+								</Style>
 
-                                <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="BorderBrush" Value="#5CAEFF" />
-                                </Style>
+								<Style
+                                    Selector="ListBoxItem:selected /template/ ContentPresenter">
+									<Setter Property="Background" Value="Transparent" />
+									<Setter Property="BorderBrush" Value="#5CAEFF" />
+								</Style>
 
-                            </ListBox.Styles>
+							</ListBox.Styles>
 
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel
+							<ListBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<WrapPanel
                                         Orientation="Horizontal"
                                         HorizontalAlignment="Left"
                                         ItemSpacing="16"
                                         LineSpacing="16" />
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
+								</ItemsPanelTemplate>
+							</ListBox.ItemsPanel>
 
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="models:Game">
-                                    <views:GameCard />
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
+							<ListBox.ItemTemplate>
+								<DataTemplate x:DataType="models:Game">
+									<views:GameCard />
+								</DataTemplate>
+							</ListBox.ItemTemplate>
 
-                        </ListBox>
+						</ListBox>
 
 						<TextBlock
                             Grid.Row="2"

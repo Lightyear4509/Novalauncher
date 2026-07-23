@@ -16,6 +16,7 @@ public partial class MainWindowViewModel : ObservableObject
 {
     private readonly GameLibraryService _libraryService;
     private readonly IFileDialogService _fileDialogService;
+    private readonly SteamLibraryService _steamLibraryService = new();
 
     public ObservableCollection<Game> Games { get; }
     public string[] SortOptions { get; } =
@@ -299,6 +300,27 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
+        if (SelectedGame.Source == "Steam" &&
+    !string.IsNullOrWhiteSpace(gameToLaunch.SteamAppId))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = $"steam://rungameid/{gameToLaunch.SteamAppId}",
+                    UseShellExecute = true
+                });
+
+                StatusText = $"Launching {gameToLaunch.Name} through Steam...";
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Could not launch Steam game: {ex.Message}";
+            }
+
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(gameToLaunch.ExecutablePath))
         {
             StatusText =
@@ -315,26 +337,7 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        if (SelectedGame.Source == "Steam" &&
-    !string.IsNullOrWhiteSpace(SelectedGame.SteamAppId))
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = $"steam://rungameid/{SelectedGame.SteamAppId}",
-                    UseShellExecute = true
-                });
-
-                StatusText = $"Launching {SelectedGame.Name} through Steam...";
-            }
-            catch (Exception ex)
-            {
-                StatusText = $"Could not launch Steam game: {ex.Message}";
-            }
-
-            return;
-        }
+        
 
         try
         {
@@ -411,6 +414,61 @@ public partial class MainWindowViewModel : ObservableObject
         {
             StatusText =
                 $"Status: Could not add the game. {exception.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private void ImportSteamGames()
+    {
+        try
+        {
+            var discoveredGames = _steamLibraryService.FindInstalledGames();
+
+            if (discoveredGames.Count == 0)
+            {
+                StatusText = "No installed Steam games were found.";
+                return;
+            }
+
+            int importedCount = 0;
+            int skippedCount = 0;
+
+            foreach (var steamGame in discoveredGames)
+            {
+                bool alreadyImported = Games.Any(game =>
+                    game.Source.Equals(
+                        "Steam",
+                        StringComparison.OrdinalIgnoreCase) &&
+                    game.SteamAppId == steamGame.AppId);
+
+                if (alreadyImported)
+                {
+                    skippedCount++;
+                    continue;
+                }
+
+                Games.Add(new Game
+                {
+                    Name = steamGame.Name,
+                    Source = "Steam",
+                    SteamAppId = steamGame.AppId,
+                    InstallDirectory = steamGame.InstallDirectory,
+                    AddedAt = DateTime.Now
+                });
+
+                importedCount++;
+            }
+
+            SaveLibrary();
+            RefreshFilteredGames();
+
+            StatusText =
+                $"Imported {importedCount} Steam game(s). " +
+                $"Skipped {skippedCount} already imported game(s).";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Steam import failed: {ex.Message}";
         }
     }
 
