@@ -150,7 +150,7 @@
 			<Grid
                 Grid.Row="1"
                 Margin="24"
-                ColumnDefinitions="360,*">
+                ColumnDefinitions="2*,*">
 
 				<!-- Game list -->
 				<Border
@@ -178,15 +178,57 @@
                             BorderThickness="0"
                             ItemsSource="{Binding FilteredGames}"
                             SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
-                            SelectionChanged="GameList_SelectionChanged">
+                            SelectionChanged="GameList_SelectionChanged"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto">
 
-							<ListBox.ItemTemplate>
-								<DataTemplate x:DataType="models:Game">
-									<views:GameCard />
-								</DataTemplate>
-							</ListBox.ItemTemplate>
+                            <ListBox.Styles>
 
-						</ListBox>
+                                <Style Selector="ListBoxItem">
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Margin" Value="0" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                                </Style>
+
+                                <Style Selector="ListBoxItem /template/ ContentPresenter">
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="BorderThickness" Value="2" />
+                                    <Setter Property="CornerRadius" Value="11" />
+                                </Style>
+
+                                <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="#596579" />
+                                </Style>
+
+                                <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="#5CAEFF" />
+                                </Style>
+
+                            </ListBox.Styles>
+
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Left"
+                                        ItemSpacing="16"
+                                        LineSpacing="16" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:Game">
+                                    <views:GameCard />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+
+                        </ListBox>
 
 						<TextBlock
                             Grid.Row="2"

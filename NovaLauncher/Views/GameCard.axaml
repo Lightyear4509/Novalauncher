@@ -3,41 +3,99 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:NovaLauncher.Models"
     x:Class="NovaLauncher.Views.GameCard"
-    x:DataType="models:Game">
+    x:DataType="models:Game"
+    Width="170">
 
 	<Border
-        Margin="0,4"
-        Padding="12"
-        Background="#202632"
-        CornerRadius="8">
+        x:Name="CardBorder"
+        Background="#1B202B"
+        BorderBrush="#303747"
+        BorderThickness="1"
+        CornerRadius="9"
+        ClipToBounds="True">
 
-		<StackPanel Spacing="5">
+		<Grid RowDefinitions="230,Auto">
 
-			<StackPanel
-                Orientation="Horizontal"
-                Spacing="8">
+			<!-- Cover area -->
+			<Border
+                Grid.Row="0"
+                Background="#252C39">
 
-				<TextBlock
-                    FontSize="16"
-                    Foreground="Gold"
-                    IsVisible="{Binding IsFavorite}"
-                    Text="★" />
+				<Grid>
 
-				<TextBlock
-                    FontSize="17"
-                    FontWeight="SemiBold"
-                    Foreground="White"
-                    Text="{Binding Name}" />
+					<!-- Placeholder remains behind the image -->
+					<StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="8">
 
-			</StackPanel>
+						<TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="44"
+                            Text="🎮" />
 
-			<TextBlock
-                MaxWidth="300"
-                Foreground="#98A2B3"
-                Text="{Binding ExecutablePath}"
-                TextTrimming="CharacterEllipsis" />
+						<TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="12"
+                            Foreground="#7F8A9A"
+                            Text="No cover" />
 
-		</StackPanel>
+					</StackPanel>
+
+					<Image
+                        Source="{Binding CoverImagePath,
+                            Converter={StaticResource CoverImageConverter}}"
+                        Stretch="UniformToFill" />
+
+					<Border
+                        Margin="8"
+                        Padding="7,4"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Background="#CC171B24"
+                        CornerRadius="12"
+                        IsVisible="{Binding IsFavorite}">
+
+						<TextBlock
+                            FontSize="15"
+                            Foreground="Gold"
+                            Text="★" />
+
+					</Border>
+
+				</Grid>
+
+			</Border>
+
+			<!-- Game information -->
+			<Border
+                Grid.Row="1"
+                Padding="12">
+
+				<Grid
+                    MinHeight="58"
+                    RowDefinitions="Auto,Auto">
+
+					<TextBlock
+                        Grid.Row="0"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+
+					<TextBlock
+                        Grid.Row="1"
+                        Margin="0,4,0,0"
+                        FontSize="11"
+                        Foreground="#7F8A9A"
+                        Text="Ready to play" />
+
+				</Grid>
+
+			</Border>
+
+		</Grid>
 
 	</Border>
 
