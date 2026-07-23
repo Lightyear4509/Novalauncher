@@ -315,6 +315,27 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
+        if (SelectedGame.Source == "Steam" &&
+    !string.IsNullOrWhiteSpace(SelectedGame.SteamAppId))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = $"steam://rungameid/{SelectedGame.SteamAppId}",
+                    UseShellExecute = true
+                });
+
+                StatusText = $"Launching {SelectedGame.Name} through Steam...";
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Could not launch Steam game: {ex.Message}";
+            }
+
+            return;
+        }
+
         try
         {
             ProcessStartInfo startInfo = new()

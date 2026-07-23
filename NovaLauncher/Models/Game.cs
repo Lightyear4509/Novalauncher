@@ -22,4 +22,10 @@ public partial class Game : ObservableObject
 
     [ObservableProperty]
     private bool isFavorite;
+
+    public string Source { get; set; } = "Manual";
+
+    public string? SteamAppId { get; set; }
+
+    public string? InstallDirectory { get; set; }
 }
