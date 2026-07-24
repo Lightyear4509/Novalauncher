@@ -5,6 +5,7 @@ using NovaLauncher.Models;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace NovaLauncher.Services.Assets;
 
@@ -252,6 +253,14 @@ public sealed partial class AssetManager
      ArtworkAssetRecord record,
      ArtworkFileInfo artwork)
     {
+        bool fileMayHaveChanged =
+            record.FileSizeBytes != artwork.FileSizeBytes ||
+            string.IsNullOrWhiteSpace(record.FileHash) ||
+            !string.Equals(
+                record.HashAlgorithm,
+                "SHA256",
+                StringComparison.OrdinalIgnoreCase);
+
         record.Type =
             artwork.Type;
 
@@ -270,6 +279,16 @@ public sealed partial class AssetManager
 
         record.IsGenerated =
             artwork.IsGenerated;
+
+        if (fileMayHaveChanged)
+        {
+            record.FileHash =
+                ComputeFileHash(
+                    artwork.AbsolutePath);
+
+            record.HashAlgorithm =
+                "SHA256";
+        }
     }
 
     private static ArtworkAssetRecord CreateArtworkRecord(
@@ -286,6 +305,13 @@ public sealed partial class AssetManager
 
             FileSizeBytes =
                 artwork.FileSizeBytes,
+
+            FileHash =
+                ComputeFileHash(
+                    artwork.AbsolutePath),
+
+            HashAlgorithm =
+                "SHA256",
 
             IsActive =
                 artwork.IsActive,
@@ -340,6 +366,27 @@ public sealed partial class AssetManager
     }
 
     /// <summary>
+    /// Computes the SHA-256 hash of a file.
+    /// </summary>
+    private static string ComputeFileHash(
+        string filePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+
+        using FileStream stream =
+            new(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read);
+
+        byte[] hash =
+            SHA256.HashData(stream);
+
+        return Convert.ToHexString(hash);
+    }
+
+    /// <summary>
     /// Enumerates every artwork file within one managed artwork folder.
     /// </summary>
     private void EnumerateArtworkFolder(
@@ -374,12 +421,13 @@ public sealed partial class AssetManager
                 new ArtworkFileInfo(
                     Type: DetermineArtworkType(fileInfo.Name),
                     Folder: folder,
-                    RelativePath: relativePath.Replace('\\', '/'),
+                    RelativePath: NormalizeRelativePath(relativePath),
                     AbsolutePath: filePath,
                     IsActive: folder == AssetFolder.ArtworkActive,
                     IsCustom: folder == AssetFolder.ArtworkCustom,
                     IsGenerated: folder == AssetFolder.ArtworkGenerated,
-                    FileSizeBytes: fileInfo.Length));
+                    FileSizeBytes: fileInfo.Length,
+                    LastModifiedAt: fileInfo.LastWriteTimeUtc));
         }
     }
 
@@ -414,5 +462,6 @@ public sealed partial class AssetManager
     bool IsActive,
     bool IsCustom,
     bool IsGenerated,
-    long FileSizeBytes);
+    long FileSizeBytes,
+    DateTimeOffset LastModifiedAt);
 }
