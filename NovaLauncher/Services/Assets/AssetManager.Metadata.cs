@@ -1,11 +1,12 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using NovaLauncher.Models;
+﻿using NovaLauncher.Models;
+using NovaLauncher.Services.Images;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NovaLauncher.Services.Assets;
 
@@ -70,7 +71,7 @@ public sealed partial class AssetManager
     /// Rebuilds artwork metadata by reconciling the current metadata
     /// records with the artwork files that exist on disk.
     /// </summary>
-    private Task RebuildArtworkMetadataAsync(
+    private async Task RebuildArtworkMetadataAsync(
         Game game,
         AssetMetadata metadata,
         CancellationToken cancellationToken)
@@ -78,15 +79,15 @@ public sealed partial class AssetManager
         cancellationToken.ThrowIfCancellationRequested();
 
         IReadOnlyList<ArtworkFileInfo> discoveredArtwork =
-            EnumerateArtworkFiles(game);
+            await EnumerateArtworkFilesAsync(
+                game,
+                cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
 
         SynchronizeArtworkMetadata(
             metadata.Artwork,
             discoveredArtwork);
-
-        return Task.CompletedTask;
     }
 
     private Task RebuildSaveMetadataAsync(
@@ -116,30 +117,36 @@ public sealed partial class AssetManager
     /// <summary>
     /// Enumerates every managed artwork file for a game.
     /// </summary>
-    private IReadOnlyList<ArtworkFileInfo> EnumerateArtworkFiles(
-        Game game)
+    private async Task<IReadOnlyList<ArtworkFileInfo>>
+        EnumerateArtworkFilesAsync(
+            Game game,
+            CancellationToken cancellationToken)
     {
         List<ArtworkFileInfo> artwork = [];
 
-        EnumerateArtworkFolder(
+        await EnumerateArtworkFolderAsync(
             game,
             AssetFolder.ArtworkOriginal,
-            artwork);
+            artwork,
+            cancellationToken);
 
-        EnumerateArtworkFolder(
+        await EnumerateArtworkFolderAsync(
             game,
             AssetFolder.ArtworkGenerated,
-            artwork);
+            artwork,
+            cancellationToken);
 
-        EnumerateArtworkFolder(
+        await EnumerateArtworkFolderAsync(
             game,
             AssetFolder.ArtworkCustom,
-            artwork);
+            artwork,
+            cancellationToken);
 
-        EnumerateArtworkFolder(
+        await EnumerateArtworkFolderAsync(
             game,
             AssetFolder.ArtworkActive,
-            artwork);
+            artwork,
+            cancellationToken);
 
         return artwork;
     }
@@ -228,9 +235,13 @@ public sealed partial class AssetManager
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
-        return path.Replace(
-            Path.DirectorySeparatorChar,
-            '/');
+        return path
+            .Replace(
+                Path.DirectorySeparatorChar,
+                '/')
+            .Replace(
+                Path.AltDirectorySeparatorChar,
+                '/');
     }
 
     /// <summary>
@@ -242,24 +253,27 @@ public sealed partial class AssetManager
         metadata.Sources =
             metadata.Items
                 .Select(item => item.Source)
-                .Where(source =>
-                    !string.IsNullOrWhiteSpace(source))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(source => source)
+                .Where(
+                    source =>
+                        !string.IsNullOrWhiteSpace(source))
+                .Distinct(
+                    StringComparer.OrdinalIgnoreCase)
+                .OrderBy(
+                    source => source,
+                    StringComparer.OrdinalIgnoreCase)
                 .ToList();
     }
 
+    /// <summary>
+    /// Updates an existing artwork metadata record with values discovered
+    /// from the current file on disk.
+    /// </summary>
     private static void UpdateArtworkRecord(
-     ArtworkAssetRecord record,
-     ArtworkFileInfo artwork)
+        ArtworkAssetRecord record,
+        ArtworkFileInfo artwork)
     {
-        bool fileMayHaveChanged =
-            record.FileSizeBytes != artwork.FileSizeBytes ||
-            string.IsNullOrWhiteSpace(record.FileHash) ||
-            !string.Equals(
-                record.HashAlgorithm,
-                "SHA256",
-                StringComparison.OrdinalIgnoreCase);
+        ArgumentNullException.ThrowIfNull(record);
+        ArgumentNullException.ThrowIfNull(artwork);
 
         record.Type =
             artwork.Type;
@@ -268,8 +282,20 @@ public sealed partial class AssetManager
             NormalizeRelativePath(
                 artwork.RelativePath);
 
+        record.Width =
+            artwork.Image.Width;
+
+        record.Height =
+            artwork.Image.Height;
+
         record.FileSizeBytes =
-            artwork.FileSizeBytes;
+            artwork.Image.FileSizeBytes;
+
+        record.FileHash =
+            artwork.Image.Hash;
+
+        record.HashAlgorithm =
+            artwork.Image.HashAlgorithm;
 
         record.IsActive =
             artwork.IsActive;
@@ -280,20 +306,22 @@ public sealed partial class AssetManager
         record.IsGenerated =
             artwork.IsGenerated;
 
-        if (fileMayHaveChanged)
+        if (string.IsNullOrWhiteSpace(record.Source))
         {
-            record.FileHash =
-                ComputeFileHash(
-                    artwork.AbsolutePath);
-
-            record.HashAlgorithm =
-                "SHA256";
+            record.Source =
+                DetermineArtworkSource(artwork);
         }
     }
 
+    /// <summary>
+    /// Creates a new artwork metadata record from an artwork file
+    /// discovered on disk.
+    /// </summary>
     private static ArtworkAssetRecord CreateArtworkRecord(
-    ArtworkFileInfo artwork)
+        ArtworkFileInfo artwork)
     {
+        ArgumentNullException.ThrowIfNull(artwork);
+
         return new ArtworkAssetRecord
         {
             Type =
@@ -303,15 +331,20 @@ public sealed partial class AssetManager
                 NormalizeRelativePath(
                     artwork.RelativePath),
 
+            Width =
+                artwork.Image.Width,
+
+            Height =
+                artwork.Image.Height,
+
             FileSizeBytes =
-                artwork.FileSizeBytes,
+                artwork.Image.FileSizeBytes,
 
             FileHash =
-                ComputeFileHash(
-                    artwork.AbsolutePath),
+                artwork.Image.Hash,
 
             HashAlgorithm =
-                "SHA256",
+                artwork.Image.HashAlgorithm,
 
             IsActive =
                 artwork.IsActive,
@@ -323,77 +356,85 @@ public sealed partial class AssetManager
                 artwork.IsGenerated,
 
             Source =
-                artwork.IsCustom
-                    ? "Custom"
-                    : artwork.IsGenerated
-                        ? "Generated"
-                        : "Unknown"
+                DetermineArtworkSource(artwork)
         };
     }
 
+    /// <summary>
+    /// Determines the metadata source label for discovered artwork.
+    /// </summary>
+    private static string DetermineArtworkSource(
+        ArtworkFileInfo artwork)
+    {
+        if (artwork.IsCustom)
+        {
+            return "Custom";
+        }
+
+        if (artwork.IsGenerated)
+        {
+            return "Generated";
+        }
+
+        if (artwork.IsActive)
+        {
+            return "Active";
+        }
+
+        return "Original";
+    }
+
     private static void UpdateActiveArtworkPaths(
-    ArtworkAssetMetadata metadata)
+        ArtworkAssetMetadata metadata)
     {
         metadata.ActiveCoverPath =
             metadata.Items.FirstOrDefault(
-                x => x.IsActive &&
-                     x.Type == AssetType.Cover)?
+                item =>
+                    item.IsActive &&
+                    item.Type == AssetType.Cover)?
                 .RelativePath;
 
         metadata.ActiveHeroPath =
             metadata.Items.FirstOrDefault(
-                x => x.IsActive &&
-                     x.Type == AssetType.Hero)?
+                item =>
+                    item.IsActive &&
+                    item.Type == AssetType.Hero)?
                 .RelativePath;
 
         metadata.ActiveLogoPath =
             metadata.Items.FirstOrDefault(
-                x => x.IsActive &&
-                     x.Type == AssetType.Logo)?
+                item =>
+                    item.IsActive &&
+                    item.Type == AssetType.Logo)?
                 .RelativePath;
 
         metadata.ActiveThumbnailPath =
             metadata.Items.FirstOrDefault(
-                x => x.IsActive &&
-                     x.Type == AssetType.Thumbnail)?
+                item =>
+                    item.IsActive &&
+                    item.Type == AssetType.Thumbnail)?
                 .RelativePath;
 
         metadata.ActiveBackgroundPath =
             metadata.Items.FirstOrDefault(
-                x => x.IsActive &&
-                     x.Type == AssetType.Background)?
+                item =>
+                    item.IsActive &&
+                    item.Type == AssetType.Background)?
                 .RelativePath;
     }
 
     /// <summary>
-    /// Computes the SHA-256 hash of a file.
+    /// Enumerates and inspects every artwork file within one managed
+    /// artwork folder.
     /// </summary>
-    private static string ComputeFileHash(
-        string filePath)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
-
-        using FileStream stream =
-            new(
-                filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read);
-
-        byte[] hash =
-            SHA256.HashData(stream);
-
-        return Convert.ToHexString(hash);
-    }
-
-    /// <summary>
-    /// Enumerates every artwork file within one managed artwork folder.
-    /// </summary>
-    private void EnumerateArtworkFolder(
+    private async Task EnumerateArtworkFolderAsync(
         Game game,
         AssetFolder folder,
-        ICollection<ArtworkFileInfo> artwork)
+        ICollection<ArtworkFileInfo> artwork,
+        CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(artwork);
+
         string folderPath =
             _paths.GetFolderPath(
                 game,
@@ -404,30 +445,101 @@ public sealed partial class AssetManager
             return;
         }
 
-        foreach (string filePath in Directory.EnumerateFiles(
-                     folderPath,
-                     "*",
-                     SearchOption.AllDirectories))
+        string gameRoot =
+            _paths.GetGameRoot(game);
+
+        IEnumerable<string> filePaths;
+
+        try
         {
+            filePaths =
+                Directory.EnumerateFiles(
+                    folderPath,
+                    "*",
+                    SearchOption.AllDirectories);
+        }
+        catch (Exception exception) when (
+            exception is IOException or
+            UnauthorizedAccessException)
+        {
+            Debug.WriteLine(
+                $"Could not enumerate artwork folder " +
+                $"'{folderPath}': {exception.Message}");
+
+            return;
+        }
+
+        foreach (string filePath in filePaths)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
             FileInfo fileInfo =
                 new(filePath);
 
+            ImageInfo imageInfo;
+
+            try
+            {
+                imageInfo =
+                    await _imageInspector.InspectAsync(
+                        fileInfo,
+                        cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception) when (
+                exception is IOException or
+                UnauthorizedAccessException or
+                InvalidDataException or
+                NotSupportedException)
+            {
+                Debug.WriteLine(
+                    $"Could not inspect artwork file " +
+                    $"'{filePath}': {exception.Message}");
+
+                continue;
+            }
+
             string relativePath =
                 Path.GetRelativePath(
-                    _paths.GetGameRoot(game),
+                    gameRoot,
                     filePath);
 
             artwork.Add(
                 new ArtworkFileInfo(
-                    Type: DetermineArtworkType(fileInfo.Name),
-                    Folder: folder,
-                    RelativePath: NormalizeRelativePath(relativePath),
-                    AbsolutePath: filePath,
-                    IsActive: folder == AssetFolder.ArtworkActive,
-                    IsCustom: folder == AssetFolder.ArtworkCustom,
-                    IsGenerated: folder == AssetFolder.ArtworkGenerated,
-                    FileSizeBytes: fileInfo.Length,
-                    LastModifiedAt: fileInfo.LastWriteTimeUtc));
+                    Type:
+                        DetermineArtworkType(
+                            fileInfo.Name),
+
+                    Folder:
+                        folder,
+
+                    RelativePath:
+                        NormalizeRelativePath(
+                            relativePath),
+
+                    AbsolutePath:
+                        fileInfo.FullName,
+
+                    IsActive:
+                        folder ==
+                        AssetFolder.ArtworkActive,
+
+                    IsCustom:
+                        folder ==
+                        AssetFolder.ArtworkCustom,
+
+                    IsGenerated:
+                        folder ==
+                        AssetFolder.ArtworkGenerated,
+
+                    Image:
+                        imageInfo,
+
+                    LastModifiedAt:
+                        fileInfo.LastWriteTimeUtc));
         }
     }
 
@@ -437,31 +549,49 @@ public sealed partial class AssetManager
     private static AssetType DetermineArtworkType(
         string filename)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filename);
+
         string name =
             Path.GetFileNameWithoutExtension(filename)
                 .ToLowerInvariant();
 
         return name switch
         {
-            "cover" => AssetType.Cover,
-            "hero" => AssetType.Hero,
-            "logo" => AssetType.Logo,
-            "thumbnail" => AssetType.Thumbnail,
-            "background" => AssetType.Background,
-            "icon" => AssetType.Icon,
+            "cover" =>
+                AssetType.Cover,
 
-            _ => AssetType.OriginalArtwork
+            "hero" =>
+                AssetType.Hero,
+
+            "logo" =>
+                AssetType.Logo,
+
+            "thumbnail" =>
+                AssetType.Thumbnail,
+
+            "background" =>
+                AssetType.Background,
+
+            "icon" =>
+                AssetType.Icon,
+
+            _ =>
+                AssetType.OriginalArtwork
         };
     }
 
+    /// <summary>
+    /// Represents an artwork file and the metadata discovered while
+    /// inspecting it.
+    /// </summary>
     private sealed record ArtworkFileInfo(
-    AssetType Type,
-    AssetFolder Folder,
-    string RelativePath,
-    string AbsolutePath,
-    bool IsActive,
-    bool IsCustom,
-    bool IsGenerated,
-    long FileSizeBytes,
-    DateTimeOffset LastModifiedAt);
+        AssetType Type,
+        AssetFolder Folder,
+        string RelativePath,
+        string AbsolutePath,
+        bool IsActive,
+        bool IsCustom,
+        bool IsGenerated,
+        ImageInfo Image,
+        DateTimeOffset LastModifiedAt);
 }

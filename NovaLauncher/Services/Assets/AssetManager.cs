@@ -1,4 +1,6 @@
-﻿using System;
+﻿using NovaLauncher.Models;
+using NovaLauncher.Services.Images;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,24 +10,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using NovaLauncher.Models;
 
 namespace NovaLauncher.Services.Assets;
 
 /// <summary>
 /// Manages NovaLauncher's game asset directories, files,
 /// manifests, and persistent asset metadata.
-///
-/// AssetManager owns filesystem operations such as:
-/// - Creating game asset directories
-/// - Locating managed assets
-/// - Importing and activating files
-/// - Reading and writing metadata
-/// - Creating and validating Nova manifests
-/// - Removing temporary or cached files
-///
-/// Path construction remains the responsibility of
-/// <see cref="AssetPaths"/>.
 /// </summary>
 public sealed partial class AssetManager
 {
@@ -50,45 +40,57 @@ public sealed partial class AssetManager
     private static readonly JsonSerializerOptions JsonOptions =
         CreateJsonOptions();
 
-    /// <summary>
-    /// Prevents multiple asynchronous operations from writing the
-    /// same game's metadata or manifest simultaneously.
-    /// </summary>
     private readonly ConcurrentDictionary<Guid, SemaphoreSlim>
         _gameLocks = new();
 
     private readonly AssetPaths _paths;
 
+    private readonly IImageInspector _imageInspector;
+
     /// <summary>
     /// Creates an AssetManager using NovaLauncher's default
-    /// local asset directory.
+    /// local asset directory and image inspector.
     /// </summary>
     public AssetManager()
-        : this(new AssetPaths())
+        : this(
+            new AssetPaths(),
+            new ImageInspector())
     {
     }
 
     /// <summary>
-    /// Creates an AssetManager using the supplied path resolver.
-    ///
-    /// This supports testing, portable mode, custom asset locations,
-    /// and external drives.
+    /// Creates an AssetManager using the supplied path resolver
+    /// and NovaLauncher's default image inspector.
     /// </summary>
-    public AssetManager(AssetPaths paths)
+    public AssetManager(
+        AssetPaths paths)
+        : this(
+            paths,
+            new ImageInspector())
+    {
+  }
+
+    /// <summary>
+    /// Creates an AssetManager using the supplied path resolver
+    /// and image-inspection service.
+    /// </summary>
+    public AssetManager(
+        AssetPaths paths,
+        IImageInspector imageInspector)
     {
         _paths =
             paths ??
-            throw new ArgumentNullException(nameof(paths));
+            throw new ArgumentNullException(
+                nameof(paths));
+
+        _imageInspector =
+            imageInspector ??
+            throw new ArgumentNullException(
+                nameof(imageInspector));
     }
 
-    /// <summary>
-    /// Gets the path resolver used by this manager.
-    /// </summary>
     public AssetPaths Paths => _paths;
 
-    /// <summary>
-    /// Gets the root directory containing all managed game assets.
-    /// </summary>
     public string AssetsRoot => _paths.AssetsRoot;
 
     /// <summary>
