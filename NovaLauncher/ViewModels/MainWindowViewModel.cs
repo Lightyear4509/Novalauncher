@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using NovaLauncher.Models;
 using NovaLauncher.Services;
+using NovaLauncher.Services.Artwork;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,21 +18,22 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly GameLibraryService _libraryService;
     private readonly IFileDialogService _fileDialogService;
     private readonly SteamLibraryService _steamLibraryService = new();
+    private readonly ArtworkCache _artworkCache;
+    private readonly ArtworkService _artworkService;
 
     public ObservableCollection<Game> Games { get; }
-    public string[] SortOptions { get; } =
-{
-    "Name: A-Z",
-    "Name: Z-A",
-    "Recently Added",
-    "Oldest Added"
-};
-    public string FavoriteButtonText =>
-    SelectedGame?.IsFavorite == true
-        ? "★ Unfavorite"
-        : "★ Favorite";
 
     public ObservableCollection<Game> FilteredGames { get; }
+
+    public string[] SortOptions { get; } =
+    {
+        "Name: A-Z",
+        "Name: Z-A",
+        "Recently Added",
+        "Oldest Added",
+        "Most Played",
+        "Recently Played"
+    };
 
     [ObservableProperty]
     private Game? selectedGame;
@@ -43,26 +45,92 @@ public partial class MainWindowViewModel : ObservableObject
     private string statusText = "Status: Ready.";
 
     [ObservableProperty]
-    private string gameName = string.Empty;
-
-    [ObservableProperty]
-    private string selectedGamePath =
-        "Choose a game from your library.";
-
-    [ObservableProperty]
     private string libraryCount = "0 games";
-    
+
     [ObservableProperty]
     private string selectedSortOption = "Name: A-Z";
 
     [ObservableProperty]
     private string selectedLibraryView = "Library";
 
+    [ObservableProperty]
+    private bool isGamePageVisible;
+
+    [ObservableProperty]
+    private string editableGameName = string.Empty;
+
+    [ObservableProperty]
+    private bool isGameRunning;
+
+    public bool IsLibraryPageVisible => !IsGamePageVisible;
+
+    public bool HasSelectedGame => SelectedGame is not null;
+
+    public string FavoriteButtonText =>
+        SelectedGame?.IsFavorite == true
+            ? "★ Unfavorite"
+            : "☆ Favorite";
+
+    public string SelectedGamePath =>
+        string.IsNullOrWhiteSpace(SelectedGame?.ExecutablePath)
+            ? SelectedGame?.Source == "Steam"
+                ? "Launched through Steam"
+                : "No executable path available"
+            : SelectedGame.ExecutablePath;
+
+    public string SelectedGameSource =>
+        string.IsNullOrWhiteSpace(SelectedGame?.Source)
+            ? "Unknown"
+            : SelectedGame.Source;
+
+    public string SelectedGamePlatform =>
+        string.IsNullOrWhiteSpace(SelectedGame?.Platform)
+            ? "PC"
+            : SelectedGame.Platform;
+
+    public string SelectedGamePlayTime =>
+        FormatPlayTime(SelectedGame?.TotalPlayTimeSeconds ?? 0);
+
+    public string SelectedGameLastPlayed =>
+        SelectedGame?.LastPlayedAt is DateTime lastPlayed
+            ? lastPlayed.ToString("MMM d, yyyy 'at' h:mm tt")
+            : "Never played";
+
+    public string SelectedGameDateAdded =>
+        SelectedGame?.AddedAt.ToString("MMM d, yyyy") ??
+        "Unknown";
+
+    public string SelectedGameLastSaved =>
+        SelectedGame?.LastSaveActivityAt is DateTime lastSaved
+            ? lastSaved.ToString("MMM d, yyyy 'at' h:mm tt")
+            : string.IsNullOrWhiteSpace(SelectedGame?.SaveFolderPath)
+                ? "Save folder not configured"
+                : "No save activity found";
+
+    public string SelectedGameSaveFolder =>
+        string.IsNullOrWhiteSpace(SelectedGame?.SaveFolderPath)
+            ? "Not configured"
+            : SelectedGame.SaveFolderPath;
+
+    public string PlayButtonText =>
+        IsGameRunning
+            ? "RUNNING"
+            : "PLAY";
+
     public MainWindowViewModel(
-    IFileDialogService fileDialogService)
+        IFileDialogService fileDialogService)
     {
         _fileDialogService = fileDialogService;
         _libraryService = new GameLibraryService();
+
+        _artworkCache = new ArtworkCache();
+
+        _artworkService = new ArtworkService(
+            _artworkCache,
+            new IArtworkProvider[]
+            {
+                new SteamArtworkProvider()
+            });
 
         Games = new ObservableCollection<Game>(
             _libraryService.LoadGames());
@@ -75,15 +143,22 @@ public partial class MainWindowViewModel : ObservableObject
             }
         }
 
+        foreach (Game game in Games)
+        {
+            EnsureGameDefaults(game);
+            UpdateLastSaveActivity(game);
+        }
+
         FilteredGames = new ObservableCollection<Game>();
 
         RefreshFilteredGames();
-
         UpdateLibraryCount();
+
+        SelectedGame = null;
+        IsGamePageVisible = false;
 
         if (Games.Count > 0)
         {
-            SelectedGame = Games[0];
             StatusText = "Status: Saved library loaded.";
         }
     }
@@ -98,25 +173,77 @@ public partial class MainWindowViewModel : ObservableObject
         RefreshFilteredGames();
     }
 
+    partial void OnIsGamePageVisibleChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsLibraryPageVisible));
+    }
+
+    partial void OnIsGameRunningChanged(bool value)
+    {
+        OnPropertyChanged(nameof(PlayButtonText));
+    }
+
     partial void OnSelectedGameChanged(Game? value)
     {
-        if (value is null)
-        {
-            GameName = string.Empty;
-            SelectedGamePath =
-                "Choose a game from your library.";
+        EditableGameName = value?.Name ?? string.Empty;
 
-            return;
+        if (value is not null)
+        {
+            EnsureGameDefaults(value);
+            UpdateLastSaveActivity(value);
+
+            IsGamePageVisible = true;
         }
 
-        GameName = value.Name;
-        SelectedGamePath = value.ExecutablePath;
+        NotifySelectedGameDetails();
+    }
+
+    private static void EnsureGameDefaults(Game game)
+    {
+        if (game.AddedAt == default)
+        {
+            game.AddedAt = DateTime.Now;
+        }
+
+        if (string.IsNullOrWhiteSpace(game.Platform))
+        {
+            game.Platform = "PC";
+        }
+
+        if (string.IsNullOrWhiteSpace(game.Source))
+        {
+            game.Source = "Manual";
+        }
+    }
+
+    private void NotifySelectedGameDetails()
+    {
+        OnPropertyChanged(nameof(HasSelectedGame));
+        OnPropertyChanged(nameof(FavoriteButtonText));
+        OnPropertyChanged(nameof(SelectedGamePath));
+        OnPropertyChanged(nameof(SelectedGameSource));
+        OnPropertyChanged(nameof(SelectedGamePlatform));
+        OnPropertyChanged(nameof(SelectedGamePlayTime));
+        OnPropertyChanged(nameof(SelectedGameLastPlayed));
+        OnPropertyChanged(nameof(SelectedGameDateAdded));
+        OnPropertyChanged(nameof(SelectedGameLastSaved));
+        OnPropertyChanged(nameof(SelectedGameSaveFolder));
+        OnPropertyChanged(nameof(PlayButtonText));
     }
 
     public void UpdateLibraryCount()
     {
         LibraryCount =
             $"{Games.Count} {(Games.Count == 1 ? "game" : "games")}";
+    }
+
+    [RelayCommand]
+    private void BackToLibrary()
+    {
+        IsGamePageVisible = false;
+        SelectedGame = null;
+
+        StatusText = "Status: Returned to library.";
     }
 
     [RelayCommand]
@@ -130,30 +257,38 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        string newName = GameName.Trim();
+        string newName =
+            EditableGameName?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(newName))
         {
             StatusText =
                 "Status: The game name cannot be empty.";
 
-            GameName = gameToRename.Name;
+            EditableGameName =
+                gameToRename.Name ?? string.Empty;
+
             return;
         }
 
         gameToRename.Name = newName;
-        RefreshFilteredGames();
+        EditableGameName = newName;
 
         SaveLibrary();
+        RefreshFilteredGames();
+        NotifySelectedGameDetails();
 
         StatusText =
-            $"Status: Renamed game to {gameToRename.Name}.";
+            $"Status: Renamed game to {newName}.";
     }
 
     [RelayCommand]
     private void ShowLibrary()
     {
         SelectedLibraryView = "Library";
+        IsGamePageVisible = false;
+        SelectedGame = null;
+
         RefreshFilteredGames();
     }
 
@@ -161,6 +296,9 @@ public partial class MainWindowViewModel : ObservableObject
     private void ShowFavorites()
     {
         SelectedLibraryView = "Favorites";
+        IsGamePageVisible = false;
+        SelectedGame = null;
+
         RefreshFilteredGames();
     }
 
@@ -168,6 +306,9 @@ public partial class MainWindowViewModel : ObservableObject
     private void ShowRecentlyAdded()
     {
         SelectedLibraryView = "Recently Added";
+        IsGamePageVisible = false;
+        SelectedGame = null;
+
         RefreshFilteredGames();
     }
 
@@ -182,12 +323,12 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        selectedGame.IsFavorite = !selectedGame.IsFavorite;
-        OnPropertyChanged(nameof(FavoriteButtonText));
+        selectedGame.IsFavorite =
+            !selectedGame.IsFavorite;
 
         SaveLibrary();
-
         RefreshFilteredGames();
+        NotifySelectedGameDetails();
 
         StatusText = selectedGame.IsFavorite
             ? $"Status: {selectedGame.Name} was added to favorites."
@@ -205,15 +346,19 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(selectedGame.CoverImagePath))
+        if (string.IsNullOrWhiteSpace(
+                selectedGame.CoverImagePath))
         {
-            StatusText = "Status: This game does not have a cover.";
+            StatusText =
+                "Status: This game does not have a cover.";
+
             return;
         }
 
         selectedGame.CoverImagePath = null;
 
         SaveLibrary();
+        NotifySelectedGameDetails();
 
         StatusText =
             $"Status: Removed the cover for {selectedGame.Name}.";
@@ -246,6 +391,7 @@ public partial class MainWindowViewModel : ObservableObject
             selectedGame.CoverImagePath = imagePath;
 
             SaveLibrary();
+            NotifySelectedGameDetails();
 
             StatusText =
                 $"Status: Cover updated for {selectedGame.Name}.";
@@ -271,18 +417,12 @@ public partial class MainWindowViewModel : ObservableObject
         string removedGameName = gameToRemove.Name;
 
         Games.Remove(gameToRemove);
-        RefreshFilteredGames();
 
-        if (Games.Count > 0)
-        {
-            SelectedGame = Games[0];
-        }
-        else
-        {
-            SelectedGame = null;
-        }
+        SelectedGame = null;
+        IsGamePageVisible = false;
 
         SaveLibrary();
+        RefreshFilteredGames();
         UpdateLibraryCount();
 
         StatusText =
@@ -290,7 +430,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void LaunchGame()
+    private async Task LaunchGame()
     {
         Game? gameToLaunch = SelectedGame;
 
@@ -300,28 +440,63 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        if (SelectedGame.Source == "Steam" &&
-    !string.IsNullOrWhiteSpace(gameToLaunch.SteamAppId))
+        if (IsGameRunning)
         {
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = $"steam://rungameid/{gameToLaunch.SteamAppId}",
-                    UseShellExecute = true
-                });
-
-                StatusText = $"Launching {gameToLaunch.Name} through Steam...";
-            }
-            catch (Exception ex)
-            {
-                StatusText = $"Could not launch Steam game: {ex.Message}";
-            }
+            StatusText =
+                "Status: A game session is already being tracked.";
 
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(gameToLaunch.ExecutablePath))
+        if (string.Equals(
+                gameToLaunch.Source,
+                "Steam",
+                StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(
+                gameToLaunch.SteamAppId))
+        {
+            LaunchSteamGame(gameToLaunch);
+            return;
+        }
+
+        await LaunchLocalGameAsync(gameToLaunch);
+    }
+
+    private void LaunchSteamGame(Game gameToLaunch)
+    {
+        try
+        {
+            Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName =
+                        $"steam://rungameid/{gameToLaunch.SteamAppId}",
+
+                    UseShellExecute = true
+                });
+
+            gameToLaunch.LastPlayedAt = DateTime.Now;
+
+            UpdateLastSaveActivity(gameToLaunch);
+            SaveLibrary();
+            NotifySelectedGameDetails();
+
+            StatusText =
+                $"Status: Launching {gameToLaunch.Name} through Steam. " +
+                "NovaLauncher cannot track the exact Steam session length yet.";
+        }
+        catch (Exception exception)
+        {
+            StatusText =
+                $"Status: Could not launch Steam game. {exception.Message}";
+        }
+    }
+
+    private async Task LaunchLocalGameAsync(
+        Game gameToLaunch)
+    {
+        if (string.IsNullOrWhiteSpace(
+                gameToLaunch.ExecutablePath))
         {
             StatusText =
                 "Status: This game does not have a valid executable path.";
@@ -332,31 +507,77 @@ public partial class MainWindowViewModel : ObservableObject
         if (!File.Exists(gameToLaunch.ExecutablePath))
         {
             StatusText =
-                "Status: The executable could not be found. It may have been moved or deleted.";
+                "Status: The executable could not be found. " +
+                "It may have been moved or deleted.";
 
             return;
         }
-
-        
 
         try
         {
             ProcessStartInfo startInfo = new()
             {
                 FileName = gameToLaunch.ExecutablePath,
+
                 WorkingDirectory =
-                    Path.GetDirectoryName(gameToLaunch.ExecutablePath),
+                    Path.GetDirectoryName(
+                        gameToLaunch.ExecutablePath) ??
+                    string.Empty,
 
                 UseShellExecute = true
             };
 
-            Process.Start(startInfo);
+            DateTime sessionStartedAt = DateTime.Now;
+
+            Process? process = Process.Start(startInfo);
+
+            if (process is null)
+            {
+                StatusText =
+                    "Status: Windows did not start the game process.";
+
+                return;
+            }
+
+            gameToLaunch.LastPlayedAt =
+                sessionStartedAt;
+
+            IsGameRunning = true;
+
+            SaveLibrary();
+            NotifySelectedGameDetails();
 
             StatusText =
-                $"Status: Launched {gameToLaunch.Name}.";
+                $"Status: {gameToLaunch.Name} is running.";
+
+            await process.WaitForExitAsync();
+
+            DateTime sessionEndedAt = DateTime.Now;
+
+            long sessionSeconds = Math.Max(
+                0,
+                (long)(sessionEndedAt -
+                       sessionStartedAt).TotalSeconds);
+
+            gameToLaunch.TotalPlayTimeSeconds +=
+                sessionSeconds;
+
+            UpdateLastSaveActivity(gameToLaunch);
+
+            IsGameRunning = false;
+
+            SaveLibrary();
+            RefreshFilteredGames();
+            NotifySelectedGameDetails();
+
+            StatusText =
+                $"Status: {gameToLaunch.Name} closed. " +
+                $"Session time: {FormatPlayTime(sessionSeconds)}.";
         }
         catch (Exception exception)
         {
+            IsGameRunning = false;
+
             StatusText =
                 $"Status: Launch failed. {exception.Message}";
         }
@@ -372,7 +593,9 @@ public partial class MainWindowViewModel : ObservableObject
 
             if (string.IsNullOrWhiteSpace(executablePath))
             {
-                StatusText = "Status: No file was selected.";
+                StatusText =
+                    "Status: No file was selected.";
+
                 return;
             }
 
@@ -394,17 +617,19 @@ public partial class MainWindowViewModel : ObservableObject
             Game newGame = new()
             {
                 Name =
-                    Path.GetFileNameWithoutExtension(executablePath),
+                    Path.GetFileNameWithoutExtension(
+                        executablePath),
 
-                ExecutablePath = executablePath
+                ExecutablePath = executablePath,
+                AddedAt = DateTime.Now,
+                Source = "Manual",
+                Platform = "PC"
             };
 
             Games.Add(newGame);
-            RefreshFilteredGames();
-
-            SelectedGame = newGame;
 
             SaveLibrary();
+            RefreshFilteredGames();
             UpdateLibraryCount();
 
             StatusText =
@@ -418,58 +643,195 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ImportSteamGames()
+    private async Task ImportSteamGames()
     {
         try
         {
-            var discoveredGames = _steamLibraryService.FindInstalledGames();
+            StatusText =
+                "Status: Searching for installed Steam games...";
+
+            var discoveredGames =
+                _steamLibraryService.FindInstalledGames();
 
             if (discoveredGames.Count == 0)
             {
-                StatusText = "No installed Steam games were found.";
+                StatusText =
+                    "Status: No installed Steam games were found.";
+
                 return;
             }
 
             int importedCount = 0;
             int skippedCount = 0;
+            int artworkCount = 0;
 
             foreach (var steamGame in discoveredGames)
             {
-                bool alreadyImported = Games.Any(game =>
-                    game.Source.Equals(
-                        "Steam",
-                        StringComparison.OrdinalIgnoreCase) &&
-                    game.SteamAppId == steamGame.AppId);
+                Game? existingGame =
+                    Games.FirstOrDefault(game =>
+                        string.Equals(
+                            game.Source,
+                            "Steam",
+                            StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(
+                            game.SteamAppId,
+                            steamGame.AppId,
+                            StringComparison.OrdinalIgnoreCase));
 
-                if (alreadyImported)
+                if (existingGame is not null)
                 {
+                    EnsureGameDefaults(existingGame);
+
+                    if (string.IsNullOrWhiteSpace(
+                            existingGame.CoverImagePath) ||
+                        !File.Exists(
+                            existingGame.CoverImagePath))
+                    {
+                        StatusText =
+                            $"Status: Downloading artwork for {existingGame.Name}...";
+
+                        string? existingCoverPath =
+                            await _artworkService
+                                .GetOrDownloadArtworkAsync(
+                                    existingGame,
+                                    ArtworkType.Cover);
+
+                        if (!string.IsNullOrWhiteSpace(
+                                existingCoverPath))
+                        {
+                            existingGame.CoverImagePath =
+                                existingCoverPath;
+
+                            artworkCount++;
+                        }
+                    }
+
                     skippedCount++;
                     continue;
                 }
 
-                Games.Add(new Game
+                Game newGame = new()
                 {
                     Name = steamGame.Name,
                     Source = "Steam",
+                    Platform = "Steam",
                     SteamAppId = steamGame.AppId,
-                    InstallDirectory = steamGame.InstallDirectory,
+                    InstallDirectory =
+                        steamGame.InstallDirectory,
                     AddedAt = DateTime.Now
-                });
+                };
+
+                Games.Add(newGame);
+
+                StatusText =
+                    $"Status: Downloading artwork for {newGame.Name}...";
+
+                string? coverPath =
+                    await _artworkService
+                        .GetOrDownloadArtworkAsync(
+                            newGame,
+                            ArtworkType.Cover);
+
+                if (!string.IsNullOrWhiteSpace(
+                        coverPath))
+                {
+                    newGame.CoverImagePath = coverPath;
+                    artworkCount++;
+                }
 
                 importedCount++;
             }
 
             SaveLibrary();
             RefreshFilteredGames();
+            UpdateLibraryCount();
 
             StatusText =
-                $"Imported {importedCount} Steam game(s). " +
-                $"Skipped {skippedCount} already imported game(s).";
+                $"Status: Imported {importedCount} Steam game(s), " +
+                $"downloaded {artworkCount} cover(s), and skipped " +
+                $"{skippedCount} existing game(s).";
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            StatusText = $"Steam import failed: {ex.Message}";
+            StatusText =
+                $"Status: Steam import failed. {exception.Message}";
         }
+    }
+
+    private void UpdateLastSaveActivity(Game game)
+    {
+        if (string.IsNullOrWhiteSpace(
+                game.SaveFolderPath))
+        {
+            return;
+        }
+
+        if (!Directory.Exists(game.SaveFolderPath))
+        {
+            return;
+        }
+
+        try
+        {
+            DateTime? newestWriteTime = Directory
+                .EnumerateFiles(
+                    game.SaveFolderPath,
+                    "*",
+                    SearchOption.AllDirectories)
+                .Select(filePath =>
+                {
+                    try
+                    {
+                        return (DateTime?)File
+                            .GetLastWriteTime(filePath);
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                })
+                .Where(date => date.HasValue)
+                .OrderByDescending(date => date)
+                .FirstOrDefault();
+
+            if (newestWriteTime.HasValue)
+            {
+                game.LastSaveActivityAt =
+                    newestWriteTime.Value;
+            }
+        }
+        catch
+        {
+            // Some save folders may contain protected or inaccessible files.
+            // The launcher should continue working even when scanning fails.
+        }
+    }
+
+    private static string FormatPlayTime(
+        long totalSeconds)
+    {
+        if (totalSeconds <= 0)
+        {
+            return "Not played yet";
+        }
+
+        TimeSpan playTime =
+            TimeSpan.FromSeconds(totalSeconds);
+
+        if (playTime.TotalHours >= 1)
+        {
+            int hours = (int)playTime.TotalHours;
+
+            return
+                $"{hours}h {playTime.Minutes}m";
+        }
+
+        if (playTime.TotalMinutes >= 1)
+        {
+            return $"{(int)playTime.TotalMinutes}m";
+        }
+
+        return $"{Math.Max(1, playTime.Seconds)}s";
     }
 
     private void SaveLibrary()
@@ -483,49 +845,71 @@ public partial class MainWindowViewModel : ObservableObject
                 "Status: NovaLauncher could not save the library.";
         }
     }
+
     private void RefreshFilteredGames()
     {
         FilteredGames.Clear();
 
-        string searchQuery = SearchText.Trim();
+        string searchQuery =
+            SearchText.Trim();
 
-        IEnumerable<Game> matchingGames = Games;
+        IEnumerable<Game> matchingGames =
+            Games;
 
-        matchingGames = SelectedLibraryView switch
+        matchingGames =
+            SelectedLibraryView switch
+            {
+                "Favorites" =>
+                    matchingGames.Where(
+                        game => game.IsFavorite),
+
+                "Recently Added" =>
+                    matchingGames
+                        .OrderByDescending(
+                            game => game.AddedAt)
+                        .Take(10),
+
+                _ => matchingGames
+            };
+
+        if (!string.IsNullOrWhiteSpace(
+                searchQuery))
         {
-            "Favorites" =>
-                matchingGames.Where(game => game.IsFavorite),
-
-            "Recently Added" =>
-                matchingGames
-                    .OrderByDescending(game => game.AddedAt)
-                    .Take(10),
-
-            _ => matchingGames
-        };
-
-        if (!string.IsNullOrWhiteSpace(searchQuery))
-        {
-            matchingGames = matchingGames.Where(game =>
-                game.Name.Contains(
-                    searchQuery,
-                    StringComparison.OrdinalIgnoreCase));
+            matchingGames =
+                matchingGames.Where(game =>
+                    game.Name.Contains(
+                        searchQuery,
+                        StringComparison.OrdinalIgnoreCase));
         }
 
-        matchingGames = SelectedSortOption switch
-        {
-            "Name: Z-A" =>
-                matchingGames.OrderByDescending(game => game.Name),
+        matchingGames =
+            SelectedSortOption switch
+            {
+                "Name: Z-A" =>
+                    matchingGames.OrderByDescending(
+                        game => game.Name),
 
-            "Recently Added" =>
-                matchingGames.OrderByDescending(game => game.AddedAt),
+                "Recently Added" =>
+                    matchingGames.OrderByDescending(
+                        game => game.AddedAt),
 
-            "Oldest Added" =>
-                matchingGames.OrderBy(game => game.AddedAt),
+                "Oldest Added" =>
+                    matchingGames.OrderBy(
+                        game => game.AddedAt),
 
-            _ =>
-                matchingGames.OrderBy(game => game.Name)
-        };
+                "Most Played" =>
+                    matchingGames.OrderByDescending(
+                        game => game.TotalPlayTimeSeconds),
+
+                "Recently Played" =>
+                    matchingGames.OrderByDescending(
+                        game => game.LastPlayedAt ??
+                                DateTime.MinValue),
+
+                _ =>
+                    matchingGames.OrderBy(
+                        game => game.Name)
+            };
 
         foreach (Game game in matchingGames)
         {

@@ -7,416 +7,380 @@
     x:Class="NovaLauncher.Views.MainWindow"
     x:DataType="viewModels:MainWindowViewModel"
     Title="NovaLauncher"
-    Width="1180"
-    Height="720"
-    MinWidth="900"
-    MinHeight="600"
-    Background="#0E1117">
+    Width="1440"
+    Height="880"
+    MinWidth="1050"
+    MinHeight="700"
+    Background="#0E141B">
 
-	<Grid ColumnDefinitions="210,*">
+	<Window.Styles>
 
-		<!-- Left sidebar -->
+		<Style Selector="Button">
+			<Setter Property="CornerRadius" Value="5" />
+			<Setter Property="Background" Value="#263646" />
+			<Setter Property="BorderBrush" Value="#364A5E" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="Foreground" Value="#DDE8F1" />
+			<Setter Property="FontWeight" Value="SemiBold" />
+		</Style>
+
+		<Style Selector="Button:pointerover">
+			<Setter Property="Background" Value="#33495E" />
+			<Setter Property="BorderBrush" Value="#4B657D" />
+		</Style>
+
+		<Style Selector="Button.primaryButton">
+			<Setter Property="Padding" Value="18,11" />
+			<Setter Property="Background" Value="#1A9FFF" />
+			<Setter Property="BorderBrush" Value="#1A9FFF" />
+			<Setter Property="Foreground" Value="White" />
+			<Setter Property="FontWeight" Value="Bold" />
+		</Style>
+
+		<Style Selector="Button.primaryButton:pointerover">
+			<Setter Property="Background" Value="#39AEFF" />
+			<Setter Property="BorderBrush" Value="#39AEFF" />
+		</Style>
+
+		<Style Selector="Button.navButton">
+			<Setter Property="Padding" Value="14,12" />
+			<Setter Property="HorizontalContentAlignment" Value="Left" />
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="BorderBrush" Value="Transparent" />
+			<Setter Property="Foreground" Value="#A5B2BF" />
+		</Style>
+
+		<Style Selector="Button.navButton:pointerover">
+			<Setter Property="Background" Value="#1D2A36" />
+			<Setter Property="Foreground" Value="White" />
+		</Style>
+
+		<Style Selector="TextBox.searchBox">
+			<Setter Property="Padding" Value="14,10" />
+			<Setter Property="CornerRadius" Value="5" />
+			<Setter Property="Background" Value="#17212B" />
+			<Setter Property="BorderBrush" Value="#304253" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="Foreground" Value="White" />
+		</Style>
+
+		<Style Selector="TextBox.searchBox:focus">
+			<Setter Property="BorderBrush" Value="#66C0F4" />
+		</Style>
+
+		<Style Selector="ComboBox.sortBox">
+			<Setter Property="Padding" Value="12,9" />
+			<Setter Property="CornerRadius" Value="5" />
+			<Setter Property="Background" Value="#17212B" />
+			<Setter Property="BorderBrush" Value="#304253" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="Foreground" Value="White" />
+		</Style>
+
+	</Window.Styles>
+
+	<Grid ColumnDefinitions="230,*">
+
+		<!-- Sidebar -->
 		<Border
             Grid.Column="0"
-            Background="#151922"
-            BorderBrush="#292F3D"
+            Background="#171D25"
+            BorderBrush="#2A3541"
             BorderThickness="0,0,1,0">
 
 			<Grid
-                Margin="18"
+                Margin="15"
                 RowDefinitions="Auto,Auto,*,Auto">
 
-				<!-- App title -->
-				<StackPanel
+				<Grid
                     Grid.Row="0"
-                    Margin="4,8,4,28"
-                    Spacing="4">
+                    Margin="5,12,5,32"
+                    ColumnDefinitions="Auto,*">
 
-					<TextBlock
-                        FontSize="24"
-                        FontWeight="Bold"
-                        Foreground="White"
-                        Text="NovaLauncher" />
-
-					<TextBlock
-                        FontSize="12"
-                        Foreground="#7F8A9A"
-                        Text="Game Library" />
-
-				</StackPanel>
-
-				<!-- Navigation -->
-				<StackPanel
-                    Grid.Row="1"
-                    Spacing="8">
-
-					<Button
-                        Padding="14,11"
-                        HorizontalContentAlignment="Left"
-                        Command="{Binding ShowLibraryCommand}"
-                        Content="🎮  Library" />
-
-					<Button
-                        Padding="14,11"
-                        HorizontalContentAlignment="Left"
-                        Command="{Binding ShowFavoritesCommand}"
-                        Content="★  Favorites" />
-
-					<Button
-                        Padding="14,11"
-                        HorizontalContentAlignment="Left"
-                        Command="{Binding ShowRecentlyAddedCommand}"
-                        Content="◷  Recently Added" />
-
-				</StackPanel>
-
-				<!-- Bottom navigation -->
-				<StackPanel
-                    Grid.Row="3"
-                    Spacing="8">
-
-					<Button
-                        Padding="14,11"
-                        HorizontalContentAlignment="Left"
-                        Content="⚙  Settings" />
-
-					<TextBlock
-                        Margin="8,8,0,0"
-                        FontSize="11"
-                        Foreground="#667085"
-                        Text="NovaLauncher v0.1" />
-
-				</StackPanel>
-
-			</Grid>
-		</Border>
-
-		<!-- Main application area -->
-		<Grid
-            Grid.Column="1"
-            RowDefinitions="Auto,*">
-
-			<!-- Top toolbar -->
-			<Border
-                Grid.Row="0"
-                Padding="24,14"
-                Background="#171B24"
-                BorderBrush="#292F3D"
-                BorderThickness="0,0,0,1">
-
-				<Grid RowDefinitions="Auto,Auto">
-
-					<!-- Library heading -->
-					<StackPanel
-                        Grid.Row="0"
-                        Spacing="2">
+					<Border
+                        Width="44"
+                        Height="44"
+                        Background="#1A9FFF"
+                        CornerRadius="7">
 
 						<TextBlock
-                            FontSize="21"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="22"
                             FontWeight="Bold"
                             Foreground="White"
-                            Text="Library" />
+                            Text="N" />
+
+					</Border>
+
+					<StackPanel
+                        Grid.Column="1"
+                        Margin="12,0,0,0"
+                        VerticalAlignment="Center">
 
 						<TextBlock
-                            FontSize="12"
-                            Foreground="#98A2B3"
-                            Text="{Binding LibraryCount}" />
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="White"
+                            Text="NovaLauncher" />
+
+						<TextBlock
+                            FontSize="10"
+                            Foreground="#63788B"
+                            Text="GAME LIBRARY" />
 
 					</StackPanel>
 
-					<!-- Toolbar controls -->
-					<WrapPanel
-                        Grid.Row="1"
-                        Margin="0,14,0,0"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Left">
-
-						<TextBox
-                            Width="220"
-                            Margin="0,0,12,8"
-                            VerticalAlignment="Center"
-                            PlaceholderText="Search games..."
-                            Text="{Binding SearchText}" />
-
-						<ComboBox
-                            Width="160"
-                            Margin="0,0,12,8"
-                            VerticalAlignment="Center"
-                            ItemsSource="{Binding SortOptions}"
-                            SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}" />
-
-						<Button
-                            Margin="0,0,12,8"
-                            Padding="18,10"
-                            VerticalAlignment="Center"
-                            Command="{Binding AddGameCommand}"
-                            Content="+ Add Game" />
-
-						<Button
-                            Margin="0,0,0,8"
-                            Padding="18,10"
-                            VerticalAlignment="Center"
-                            Command="{Binding ImportSteamGamesCommand}"
-                            Content="Import Steam" />
-
-					</WrapPanel>
-
 				</Grid>
-			</Border>
 
-			<!-- Library content -->
-			<Grid
-                Grid.Row="1"
-                Margin="24"
-                ColumnDefinitions="2*,*">
+				<StackPanel
+                    Grid.Row="1"
+                    Spacing="5">
 
-				<!-- Game list -->
-				<Border
-                    Grid.Column="0"
-                    Padding="16"
-                    Background="#171B24"
-                    BorderBrush="#303747"
-                    BorderThickness="1"
-                    CornerRadius="12">
+					<TextBlock
+                        Margin="12,0,0,8"
+                        FontSize="10"
+                        FontWeight="Bold"
+                        Foreground="#607386"
+                        Text="LIBRARY" />
 
-					<Grid RowDefinitions="Auto,*,Auto">
+					<Button
+                        Classes="navButton"
+                        Command="{Binding ShowLibraryCommand}"
+                        Content="▦   All Games" />
 
-						<TextBlock
-                            Grid.Row="0"
-                            Margin="4,0,0,14"
-                            FontSize="18"
-                            FontWeight="SemiBold"
-                            Foreground="White"
-                            Text="All Games" />
+					<Button
+                        Classes="navButton"
+                        Command="{Binding ShowFavoritesCommand}"
+                        Content="★   Favorites" />
 
-						<ListBox
-                            x:Name="GameList"
-                            Grid.Row="1"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            ItemsSource="{Binding FilteredGames}"
-                            SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
-                            SelectionChanged="GameList_SelectionChanged"
-                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            ScrollViewer.VerticalScrollBarVisibility="Auto">
+					<Button
+                        Classes="navButton"
+                        Command="{Binding ShowRecentlyAddedCommand}"
+                        Content="◷   Recently Added" />
 
-							<ListBox.Styles>
+				</StackPanel>
 
-								<Style Selector="ListBoxItem">
-									<Setter Property="Padding" Value="0" />
-									<Setter Property="Margin" Value="0" />
-									<Setter Property="Background" Value="Transparent" />
-									<Setter
-                                        Property="HorizontalContentAlignment"
-                                        Value="Stretch" />
-									<Setter
-                                        Property="VerticalContentAlignment"
-                                        Value="Stretch" />
-								</Style>
+				<StackPanel
+                    Grid.Row="3"
+                    Spacing="9">
 
-								<Style Selector="ListBoxItem /template/ ContentPresenter">
-									<Setter Property="Padding" Value="0" />
-									<Setter Property="Background" Value="Transparent" />
-									<Setter Property="BorderBrush" Value="Transparent" />
-									<Setter Property="BorderThickness" Value="2" />
-									<Setter Property="CornerRadius" Value="11" />
-								</Style>
+					<Border
+                        Padding="14"
+                        Background="#111820"
+                        BorderBrush="#2A3948"
+                        BorderThickness="1"
+                        CornerRadius="6">
 
-								<Style
-                                    Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-									<Setter Property="Background" Value="Transparent" />
-									<Setter Property="BorderBrush" Value="#596579" />
-								</Style>
-
-								<Style
-                                    Selector="ListBoxItem:selected /template/ ContentPresenter">
-									<Setter Property="Background" Value="Transparent" />
-									<Setter Property="BorderBrush" Value="#5CAEFF" />
-								</Style>
-
-							</ListBox.Styles>
-
-							<ListBox.ItemsPanel>
-								<ItemsPanelTemplate>
-									<WrapPanel
-                                        Orientation="Horizontal"
-                                        HorizontalAlignment="Left"
-                                        ItemSpacing="16"
-                                        LineSpacing="16" />
-								</ItemsPanelTemplate>
-							</ListBox.ItemsPanel>
-
-							<ListBox.ItemTemplate>
-								<DataTemplate x:DataType="models:Game">
-									<views:GameCard />
-								</DataTemplate>
-							</ListBox.ItemTemplate>
-
-						</ListBox>
-
-						<TextBlock
-                            Grid.Row="2"
-                            Margin="4,14,0,0"
-                            Foreground="#98A2B3"
-                            Text="{Binding LibraryCount}" />
-
-					</Grid>
-				</Border>
-
-				<!-- Selected game details -->
-				<Border
-                    Grid.Column="1"
-                    Margin="24,0,0,0"
-                    Padding="30"
-                    Background="#171B24"
-                    BorderBrush="#303747"
-                    BorderThickness="1"
-                    CornerRadius="12">
-
-					<Grid RowDefinitions="260,Auto,Auto,Auto,Auto,Auto">
-
-						<!-- Cover preview -->
-						<Border
-                            Grid.Row="0"
-                            Background="#252C39"
-                            CornerRadius="10"
-                            ClipToBounds="True">
-
-							<Grid>
-
-								<StackPanel
-                                    x:Name="CoverPlaceholder"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Spacing="10">
-
-									<TextBlock
-                                        HorizontalAlignment="Center"
-                                        FontSize="70"
-                                        Text="🎮" />
-
-									<TextBlock
-                                        Foreground="#98A2B3"
-                                        Text="No cover selected" />
-
-								</StackPanel>
-
-								<Image
-                                    x:Name="CoverImage"
-                                    IsVisible="False"
-                                    Stretch="UniformToFill" />
-
-							</Grid>
-						</Border>
-
-						<!-- Editable game name -->
-						<StackPanel
-                            Grid.Row="1"
-                            Margin="0,22,0,0"
-                            Spacing="7">
+						<StackPanel Spacing="4">
 
 							<TextBlock
-                                FontWeight="SemiBold"
-                                Foreground="#98A2B3"
-                                Text="Display name" />
+                                FontSize="10"
+                                FontWeight="Bold"
+                                Foreground="#607386"
+                                Text="YOUR COLLECTION" />
 
-							<TextBox
-                                x:Name="GameNameTextBox"
-                                FontSize="20"
-                                PlaceholderText="Game name"
-                                IsEnabled="False"
-                                Text="{Binding GameName, Mode=TwoWay}" />
+							<TextBlock
+                                FontSize="18"
+                                FontWeight="Bold"
+                                Foreground="White"
+                                Text="{Binding LibraryCount}" />
 
 						</StackPanel>
 
-						<!-- Executable path -->
-						<TextBlock
-                            Grid.Row="2"
-                            Margin="0,14,0,0"
-                            Foreground="#AAB3C2"
-                            Text="{Binding SelectedGamePath}"
-                            TextWrapping="Wrap" />
+					</Border>
 
-						<!-- Editing buttons -->
-						<WrapPanel
-                            Grid.Row="3"
-                            Margin="0,16,0,0"
-                            Orientation="Horizontal">
+					<TextBlock
+                        Margin="12,7,0,2"
+                        FontSize="10"
+                        Foreground="#536575"
+                        Text="NovaLauncher v0.2" />
 
-							<Button
-                                x:Name="SaveNameButton"
-                                Margin="0,0,10,10"
-                                Padding="16,9"
-                                Command="{Binding SaveNameCommand}"
-                                Content="Save Name"
-                                IsEnabled="False" />
+				</StackPanel>
 
-							<Button
-                                x:Name="ChooseCoverButton"
-                                Margin="0,0,10,10"
-                                Padding="16,9"
-                                Command="{Binding ChooseCoverCommand}"
-                                Content="Choose Cover"
-                                IsEnabled="False" />
+			</Grid>
 
-							<Button
-                                Margin="0,0,10,10"
-                                Padding="16,9"
-                                Command="{Binding ToggleFavoriteCommand}"
-                                Content="{Binding FavoriteButtonText}" />
+		</Border>
 
-							<Button
-                                x:Name="RemoveCoverButton"
-                                Margin="0,0,10,10"
-                                Padding="16,9"
-                                Command="{Binding RemoveCoverCommand}"
-                                Content="Remove Cover"
-                                IsEnabled="False" />
+		<!-- Main application area -->
+		<Grid Grid.Column="1">
 
-						</WrapPanel>
+			<!-- Library page -->
+			<Grid
+                IsVisible="{Binding IsLibraryPageVisible}"
+                RowDefinitions="Auto,*">
 
-						<!-- Status -->
-						<Border
-                            Grid.Row="4"
-                            Margin="0,18,0,0"
-                            Padding="12"
-                            Background="#202632"
-                            BorderBrush="#303747"
-                            BorderThickness="1"
-                            CornerRadius="8">
+				<Border
+                    Grid.Row="0"
+                    Padding="25,17"
+                    Background="#19232D"
+                    BorderBrush="#2B3946"
+                    BorderThickness="0,0,0,1">
+
+					<Grid ColumnDefinitions="*,Auto">
+
+						<StackPanel Spacing="2">
 
 							<TextBlock
-                                Foreground="#C8D1E0"
-                                Text="{Binding StatusText}"
-                                TextWrapping="Wrap" />
+                                FontSize="23"
+                                FontWeight="Bold"
+                                Foreground="White"
+                                Text="{Binding SelectedLibraryView}" />
+
+							<TextBlock
+                                FontSize="11"
+                                Foreground="#71869A"
+                                Text="Browse and launch your PC game collection" />
+
+						</StackPanel>
+
+						<StackPanel
+                            Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Spacing="10">
+
+							<TextBox
+                                Width="245"
+                                Classes="searchBox"
+                                PlaceholderText="Search games..."
+                                Text="{Binding SearchText, Mode=TwoWay}" />
+
+							<ComboBox
+                                Width="170"
+                                Classes="sortBox"
+                                ItemsSource="{Binding SortOptions}"
+                                SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}" />
+
+							<Button
+                                Padding="17,11"
+                                Command="{Binding ImportSteamGamesCommand}"
+                                Content="Import Steam" />
+
+							<Button
+                                Classes="primaryButton"
+                                Command="{Binding AddGameCommand}"
+                                Content="+ Add Game" />
+
+						</StackPanel>
+
+					</Grid>
+
+				</Border>
+
+				<Grid
+                    Grid.Row="1"
+                    Margin="24"
+                    RowDefinitions="Auto,*,Auto">
+
+					<Grid
+                        Grid.Row="0"
+                        Margin="0,0,0,18"
+                        ColumnDefinitions="*,Auto">
+
+						<StackPanel Spacing="4">
+
+							<TextBlock
+                                FontSize="22"
+                                FontWeight="Bold"
+                                Foreground="White"
+                                Text="Your Games" />
+
+							<TextBlock
+                                FontSize="12"
+                                Foreground="#71869A"
+                                Text="Click a game to open its game page" />
+
+						</StackPanel>
+
+						<Border
+                            Grid.Column="1"
+                            Padding="11,6"
+                            VerticalAlignment="Center"
+                            Background="#20384D"
+                            CornerRadius="4">
+
+							<TextBlock
+                                FontWeight="Bold"
+                                Foreground="#66C0F4"
+                                Text="{Binding LibraryCount}" />
 
 						</Border>
 
-						<!-- Game actions -->
-						<Grid
-                            Grid.Row="5"
-                            Margin="0,24,0,0"
-                            ColumnDefinitions="*,Auto">
-
-							<Button
-                                Grid.Column="0"
-                                Padding="20,13"
-                                Command="{Binding LaunchGameCommand}"
-                                Content="▶ Play" />
-
-							<Button
-                                Grid.Column="1"
-                                Margin="12,0,0,0"
-                                Padding="20,13"
-                                Command="{Binding RemoveGameCommand}"
-                                Content="Remove" />
-
-						</Grid>
-
 					</Grid>
-				</Border>
+
+					<ListBox
+                        Grid.Row="1"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ItemsSource="{Binding FilteredGames}"
+                        SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto">
+
+						<ListBox.Styles>
+
+							<Style Selector="ListBoxItem">
+								<Setter Property="Padding" Value="0" />
+								<Setter Property="Margin" Value="0" />
+								<Setter Property="Background" Value="Transparent" />
+								<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+								<Setter Property="VerticalContentAlignment" Value="Stretch" />
+							</Style>
+
+							<Style Selector="ListBoxItem /template/ ContentPresenter">
+								<Setter Property="Padding" Value="0" />
+								<Setter Property="Background" Value="Transparent" />
+								<Setter Property="BorderBrush" Value="Transparent" />
+							</Style>
+
+						</ListBox.Styles>
+
+						<ListBox.ItemsPanel>
+							<ItemsPanelTemplate>
+
+								<WrapPanel
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Left"
+                                    ItemSpacing="17"
+                                    LineSpacing="17" />
+
+							</ItemsPanelTemplate>
+						</ListBox.ItemsPanel>
+
+						<ListBox.ItemTemplate>
+							<DataTemplate x:DataType="models:Game">
+								<views:GameCard />
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+
+					</ListBox>
+
+					<Border
+                        Grid.Row="2"
+                        Margin="0,16,0,0"
+                        Padding="12,9"
+                        Background="#111820"
+                        CornerRadius="5">
+
+						<TextBlock
+                            FontSize="11"
+                            Foreground="#71869A"
+                            Text="{Binding StatusText}"
+                            TextTrimming="CharacterEllipsis" />
+
+					</Border>
+
+				</Grid>
 
 			</Grid>
+
+			<!-- Full game page -->
+			<views:GameDetails
+                IsVisible="{Binding IsGamePageVisible}" />
+
 		</Grid>
+
 	</Grid>
+
 </Window>

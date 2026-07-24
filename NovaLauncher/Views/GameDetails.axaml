@@ -1,0 +1,777 @@
+﻿<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:viewModels="using:NovaLauncher.ViewModels"
+    x:Class="NovaLauncher.Views.GameDetails"
+    x:DataType="viewModels:MainWindowViewModel"
+    Background="#0E141B">
+
+    <UserControl.Styles>
+
+        <!-- Back button -->
+        <Style Selector="Button.backButton">
+            <Setter Property="Padding" Value="13,9" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Background" Value="#1B2835" />
+            <Setter Property="BorderBrush" Value="#34485B" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#DCE8F2" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="Button.backButton:pointerover">
+            <Setter Property="Background" Value="#26394A" />
+            <Setter Property="BorderBrush" Value="#4A657C" />
+        </Style>
+
+        <!-- Main play button -->
+        <Style Selector="Button.playButton">
+            <Setter Property="MinWidth" Value="165" />
+            <Setter Property="Padding" Value="24,14" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Background" Value="#75B022" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style Selector="Button.playButton:pointerover">
+            <Setter Property="Background" Value="#89C52E" />
+        </Style>
+
+        <Style Selector="Button.playButton:pressed">
+            <Setter Property="Background" Value="#5F941B" />
+        </Style>
+
+        <!-- Secondary action buttons -->
+        <Style Selector="Button.secondaryButton">
+            <Setter Property="Padding" Value="15,11" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Background" Value="#29384A" />
+            <Setter Property="BorderBrush" Value="#3A4B5F" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#DDE7F2" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="Button.secondaryButton:pointerover">
+            <Setter Property="Background" Value="#344A61" />
+            <Setter Property="BorderBrush" Value="#516A83" />
+        </Style>
+
+        <!-- Destructive action -->
+        <Style Selector="Button.dangerButton">
+            <Setter Property="Padding" Value="15,11" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Background" Value="#37242B" />
+            <Setter Property="BorderBrush" Value="#693B49" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#FF9CAF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="Button.dangerButton:pointerover">
+            <Setter Property="Background" Value="#4B2934" />
+            <Setter Property="BorderBrush" Value="#925063" />
+        </Style>
+
+        <!-- Editable game-name field -->
+        <Style Selector="TextBox.nameBox">
+            <Setter Property="Padding" Value="13,11" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Background" Value="#17212D" />
+            <Setter Property="BorderBrush" Value="#34475A" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <Style Selector="TextBox.nameBox:focus">
+            <Setter Property="BorderBrush" Value="#66C0F4" />
+        </Style>
+
+        <!-- Reusable information panel -->
+        <Style Selector="Border.informationPanel">
+            <Setter Property="Padding" Value="19" />
+            <Setter Property="Background" Value="#151F2A" />
+            <Setter Property="BorderBrush" Value="#2A3A4B" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="7" />
+        </Style>
+
+        <!-- Reusable statistic card -->
+        <Style Selector="Border.statCard">
+            <Setter Property="MinHeight" Value="92" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Background" Value="#151F2A" />
+            <Setter Property="BorderBrush" Value="#2A3A4B" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="7" />
+        </Style>
+
+        <!-- Small uppercase section label -->
+        <Style Selector="TextBlock.fieldLabel">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#71869A" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Top navigation bar -->
+        <Border
+            Grid.Row="0"
+            Padding="22,13"
+            Background="#171F29"
+            BorderBrush="#293846"
+            BorderThickness="0,0,0,1">
+
+            <Grid ColumnDefinitions="Auto,*,Auto">
+
+                <Button
+                    Grid.Column="0"
+                    Classes="backButton"
+                    Command="{Binding BackToLibraryCommand}"
+                    Content="←  Back to Library" />
+
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="18,0"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="#8497A9"
+                    Text="{Binding StatusText}"
+                    TextTrimming="CharacterEllipsis" />
+
+                <Border
+                    Grid.Column="2"
+                    Padding="10,5"
+                    VerticalAlignment="Center"
+                    Background="#20384D"
+                    CornerRadius="4">
+
+                    <TextBlock
+                        FontSize="10"
+                        FontWeight="Bold"
+                        Foreground="#66C0F4"
+                        Text="{Binding SelectedGameSource}" />
+
+                </Border>
+
+            </Grid>
+
+        </Border>
+
+        <ScrollViewer
+            Grid.Row="1"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+
+            <StackPanel>
+
+                <!--
+                    FIXED-SIZE HERO
+
+                    This section always remains 360 pixels tall.
+                    Artwork resolution and aspect ratio cannot expand it.
+                -->
+                <Border
+                    Height="360"
+                    Background="#111A24"
+                    ClipToBounds="True">
+
+                    <Grid>
+
+                        <!-- Decorative background artwork -->
+                        <Image
+                            Source="{Binding SelectedGame.CoverImagePath,
+                                Converter={StaticResource CoverImageConverter}}"
+                            Stretch="UniformToFill"
+                            Opacity="0.20" />
+
+                        <!-- Dark overlay keeps text readable -->
+                        <Border Background="#C20C1219" />
+
+                        <!-- Bottom depth gradient -->
+                        <Border VerticalAlignment="Stretch">
+
+                            <Border.Background>
+                                <LinearGradientBrush
+                                    StartPoint="50%,0%"
+                                    EndPoint="50%,100%">
+
+                                    <GradientStop
+                                        Offset="0"
+                                        Color="#24101922" />
+
+                                    <GradientStop
+                                        Offset="0.65"
+                                        Color="#B5101821" />
+
+                                    <GradientStop
+                                        Offset="1"
+                                        Color="#F20E141B" />
+
+                                </LinearGradientBrush>
+                            </Border.Background>
+
+                        </Border>
+
+                        <Grid
+                            Margin="34,25"
+                            ColumnDefinitions="190,*"
+                            ColumnSpacing="29">
+
+                            <!--
+                                FIXED 2:3 PORTRAIT COVER
+
+                                190 × 285 remains identical for every game.
+                                Stretch=Uniform preserves all original artwork.
+                            -->
+                            <Border
+                                Grid.Column="0"
+                                Width="190"
+                                Height="285"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="#202A36"
+                                BorderBrush="#45586B"
+                                BorderThickness="1"
+                                CornerRadius="7"
+                                ClipToBounds="True">
+
+                                <Grid>
+
+                                    <!-- Cover placeholder -->
+                                    <StackPanel
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Spacing="9">
+
+                                        <Border
+                                            Width="55"
+                                            Height="55"
+                                            Background="#2B3A49"
+                                            CornerRadius="28">
+
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontSize="25"
+                                                Text="🎮" />
+
+                                        </Border>
+
+                                        <TextBlock
+                                            HorizontalAlignment="Center"
+                                            FontSize="11"
+                                            Foreground="#78899A"
+                                            Text="No cover available" />
+
+                                    </StackPanel>
+
+                                    <!-- Actual cover -->
+                                    <Image
+                                        Source="{Binding SelectedGame.CoverImagePath,
+                                            Converter={StaticResource CoverImageConverter}}"
+                                        Stretch="Uniform" />
+
+                                </Grid>
+
+                            </Border>
+
+                            <!-- Game heading and actions -->
+                            <Grid
+                                Grid.Column="1"
+                                RowDefinitions="*,Auto">
+
+                                <StackPanel
+                                    Grid.Row="0"
+                                    VerticalAlignment="Center"
+                                    Spacing="13">
+
+                                    <!-- Platform and status badges -->
+                                    <StackPanel
+                                        Orientation="Horizontal"
+                                        Spacing="8">
+
+                                        <Border
+                                            Padding="9,4"
+                                            Background="#294B67"
+                                            CornerRadius="3">
+
+                                            <TextBlock
+                                                FontSize="10"
+                                                FontWeight="Bold"
+                                                Foreground="#B7DCF3"
+                                                Text="{Binding SelectedGamePlatform}" />
+
+                                        </Border>
+
+                                        <Border
+                                            Padding="9,4"
+                                            Background="#26382A"
+                                            CornerRadius="3">
+
+                                            <TextBlock
+                                                FontSize="10"
+                                                FontWeight="Bold"
+                                                Foreground="#9ED7A7"
+                                                Text="READY TO PLAY" />
+
+                                        </Border>
+
+                                    </StackPanel>
+
+                                    <!-- Fixed title region -->
+                                    <TextBlock
+                                        MaxHeight="104"
+                                        MaxLines="2"
+                                        FontSize="38"
+                                        FontWeight="Bold"
+                                        Foreground="White"
+                                        Text="{Binding SelectedGame.Name}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        MaxWidth="700"
+                                        FontSize="12"
+                                        Foreground="#9EB0C0"
+                                        Text="Launch, track and manage this game from your NovaLauncher library."
+                                        TextWrapping="Wrap" />
+
+                                    <!-- Main game actions -->
+                                    <StackPanel
+                                        Margin="0,5,0,0"
+                                        Orientation="Horizontal"
+                                        Spacing="10">
+
+                                        <Button
+                                            Classes="playButton"
+                                            Command="{Binding LaunchGameCommand}"
+                                            Content="{Binding PlayButtonText}"
+                                            IsEnabled="{Binding HasSelectedGame}" />
+
+                                        <Button
+                                            Classes="secondaryButton"
+                                            Command="{Binding ToggleFavoriteCommand}"
+                                            Content="{Binding FavoriteButtonText}"
+                                            IsEnabled="{Binding HasSelectedGame}" />
+
+                                    </StackPanel>
+
+                                </StackPanel>
+
+                                <!-- Executable summary -->
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Margin="0,10,0,0"
+                                    FontFamily="Consolas"
+                                    FontSize="10"
+                                    Foreground="#718395"
+                                    MaxLines="1"
+                                    Text="{Binding SelectedGamePath}"
+                                    TextTrimming="CharacterEllipsis" />
+
+                            </Grid>
+
+                        </Grid>
+
+                    </Grid>
+
+                </Border>
+
+                <!-- Statistics appear immediately beneath hero -->
+                <Grid
+                    Margin="28,20,28,0"
+                    ColumnDefinitions="*,*,*,*"
+                    ColumnSpacing="12">
+
+                    <!-- Time played -->
+                    <Border
+                        Grid.Column="0"
+                        Classes="statCard">
+
+                        <StackPanel Spacing="7">
+
+                            <TextBlock
+                                Classes="fieldLabel"
+                                Text="TIME PLAYED" />
+
+                            <TextBlock
+                                FontSize="20"
+                                FontWeight="Bold"
+                                Foreground="White"
+                                Text="{Binding SelectedGamePlayTime}"
+                                TextWrapping="Wrap" />
+
+                        </StackPanel>
+
+                    </Border>
+
+                    <!-- Last played -->
+                    <Border
+                        Grid.Column="1"
+                        Classes="statCard">
+
+                        <StackPanel Spacing="7">
+
+                            <TextBlock
+                                Classes="fieldLabel"
+                                Text="LAST PLAYED" />
+
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="{Binding SelectedGameLastPlayed}"
+                                TextWrapping="Wrap" />
+
+                        </StackPanel>
+
+                    </Border>
+
+                    <!-- Last save -->
+                    <Border
+                        Grid.Column="2"
+                        Classes="statCard">
+
+                        <StackPanel Spacing="7">
+
+                            <TextBlock
+                                Classes="fieldLabel"
+                                Text="LAST SAVED" />
+
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="{Binding SelectedGameLastSaved}"
+                                TextWrapping="Wrap" />
+
+                        </StackPanel>
+
+                    </Border>
+
+                    <!-- Date added -->
+                    <Border
+                        Grid.Column="3"
+                        Classes="statCard">
+
+                        <StackPanel Spacing="7">
+
+                            <TextBlock
+                                Classes="fieldLabel"
+                                Text="ADDED TO LIBRARY" />
+
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="{Binding SelectedGameDateAdded}"
+                                TextWrapping="Wrap" />
+
+                        </StackPanel>
+
+                    </Border>
+
+                </Grid>
+
+                <!-- Main details -->
+                <Grid
+                    Margin="28,18,28,30"
+                    ColumnDefinitions="1.4*,0.8*"
+                    ColumnSpacing="18">
+
+                    <!-- Left details column -->
+                    <StackPanel
+                        Grid.Column="0"
+                        Spacing="16">
+
+                        <!-- Game information -->
+                        <Border Classes="informationPanel">
+
+                            <StackPanel Spacing="16">
+
+                                <StackPanel Spacing="3">
+
+                                    <TextBlock
+                                        FontSize="18"
+                                        FontWeight="Bold"
+                                        Foreground="White"
+                                        Text="Game Information" />
+
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="#71869A"
+                                        Text="Basic information and launch configuration." />
+
+                                </StackPanel>
+
+                                <!-- Editable display name -->
+                                <StackPanel Spacing="7">
+
+                                    <TextBlock
+                                        Classes="fieldLabel"
+                                        Text="DISPLAY NAME" />
+
+                                    <Grid ColumnDefinitions="*,Auto">
+
+                                        <TextBox
+                                            Grid.Column="0"
+                                            Classes="nameBox"
+                                            IsEnabled="{Binding HasSelectedGame}"
+                                            Text="{Binding EditableGameName, Mode=TwoWay}" />
+
+                                        <Button
+                                            Grid.Column="1"
+                                            Margin="9,0,0,0"
+                                            Classes="secondaryButton"
+                                            Command="{Binding SaveNameCommand}"
+                                            Content="Save Name"
+                                            IsEnabled="{Binding HasSelectedGame}" />
+
+                                    </Grid>
+
+                                </StackPanel>
+
+                                <!-- Executable path -->
+                                <StackPanel Spacing="7">
+
+                                    <TextBlock
+                                        Classes="fieldLabel"
+                                        Text="EXECUTABLE" />
+
+                                    <Border
+                                        Padding="12"
+                                        Background="#101821"
+                                        BorderBrush="#26384A"
+                                        BorderThickness="1"
+                                        CornerRadius="5">
+
+                                        <TextBlock
+                                            FontFamily="Consolas"
+                                            FontSize="11"
+                                            Foreground="#B7C8D8"
+                                            Text="{Binding SelectedGamePath}"
+                                            TextWrapping="Wrap" />
+
+                                    </Border>
+
+                                </StackPanel>
+
+                                <!-- Save folder -->
+                                <StackPanel Spacing="7">
+
+                                    <TextBlock
+                                        Classes="fieldLabel"
+                                        Text="SAVE FOLDER" />
+
+                                    <Border
+                                        Padding="12"
+                                        Background="#101821"
+                                        BorderBrush="#26384A"
+                                        BorderThickness="1"
+                                        CornerRadius="5">
+
+                                        <TextBlock
+                                            FontFamily="Consolas"
+                                            FontSize="11"
+                                            Foreground="#B7C8D8"
+                                            Text="{Binding SelectedGameSaveFolder}"
+                                            TextWrapping="Wrap" />
+
+                                    </Border>
+
+                                </StackPanel>
+
+                            </StackPanel>
+
+                        </Border>
+
+                        <!-- Launcher status -->
+                        <Border
+                            Padding="14"
+                            Background="#142435"
+                            BorderBrush="#294B67"
+                            BorderThickness="1"
+                            CornerRadius="7">
+
+                            <Grid ColumnDefinitions="Auto,*">
+
+                                <Border
+                                    Grid.Column="0"
+                                    Width="8"
+                                    Height="8"
+                                    Margin="0,0,11,0"
+                                    VerticalAlignment="Center"
+                                    Background="#66C0F4"
+                                    CornerRadius="4" />
+
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Spacing="3">
+
+                                    <TextBlock
+                                        Classes="fieldLabel"
+                                        Foreground="#6EAED5"
+                                        Text="LAUNCHER STATUS" />
+
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="#C8DAE8"
+                                        Text="{Binding StatusText}"
+                                        TextWrapping="Wrap" />
+
+                                </StackPanel>
+
+                            </Grid>
+
+                        </Border>
+
+                    </StackPanel>
+
+                    <!-- Right management column -->
+                    <StackPanel
+                        Grid.Column="1"
+                        Spacing="16">
+
+                        <!-- Artwork panel -->
+                        <Border Classes="informationPanel">
+
+                            <StackPanel Spacing="13">
+
+                                <StackPanel Spacing="3">
+
+                                    <TextBlock
+                                        FontSize="17"
+                                        FontWeight="Bold"
+                                        Foreground="White"
+                                        Text="Artwork" />
+
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="#71869A"
+                                        Text="Covers are displayed at a consistent 2:3 ratio."
+                                        TextWrapping="Wrap" />
+
+                                </StackPanel>
+
+                                <Button
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Classes="secondaryButton"
+                                    Command="{Binding ChooseCoverCommand}"
+                                    Content="Choose New Cover"
+                                    IsEnabled="{Binding HasSelectedGame}" />
+
+                                <Button
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Classes="secondaryButton"
+                                    Command="{Binding RemoveCoverCommand}"
+                                    Content="Remove Cover"
+                                    IsEnabled="{Binding HasSelectedGame}" />
+
+                            </StackPanel>
+
+                        </Border>
+
+                        <!-- Source panel -->
+                        <Border Classes="informationPanel">
+
+                            <StackPanel Spacing="13">
+
+                                <TextBlock
+                                    FontSize="17"
+                                    FontWeight="Bold"
+                                    Foreground="White"
+                                    Text="Library Source" />
+
+                                <Grid
+                                    ColumnDefinitions="Auto,*"
+                                    RowDefinitions="Auto,Auto"
+                                    RowSpacing="9">
+
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Classes="fieldLabel"
+                                        Text="SOURCE" />
+
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        Margin="15,0,0,0"
+                                        HorizontalAlignment="Right"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="White"
+                                        Text="{Binding SelectedGameSource}" />
+
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Classes="fieldLabel"
+                                        Text="PLATFORM" />
+
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        Margin="15,0,0,0"
+                                        HorizontalAlignment="Right"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="White"
+                                        Text="{Binding SelectedGamePlatform}" />
+
+                                </Grid>
+
+                            </StackPanel>
+
+                        </Border>
+
+                        <!-- Remove panel -->
+                        <Border Classes="informationPanel">
+
+                            <StackPanel Spacing="13">
+
+                                <TextBlock
+                                    FontSize="17"
+                                    FontWeight="Bold"
+                                    Foreground="White"
+                                    Text="Library Management" />
+
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="#71869A"
+                                    Text="Removing this entry does not delete the installed game files."
+                                    TextWrapping="Wrap" />
+
+                                <Button
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Classes="dangerButton"
+                                    Command="{Binding RemoveGameCommand}"
+                                    Content="Remove from Library"
+                                    IsEnabled="{Binding HasSelectedGame}" />
+
+                            </StackPanel>
+
+                        </Border>
+
+                    </StackPanel>
+
+                </Grid>
+
+            </StackPanel>
+
+        </ScrollViewer>
+
+    </Grid>
+
+</UserControl>

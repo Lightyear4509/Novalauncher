@@ -21,7 +21,25 @@ public partial class Game : ObservableObject
     private string? coverImagePath;
 
     [ObservableProperty]
+    private string? heroImagePath;
+
+    [ObservableProperty]
     private bool isFavorite;
+
+    [ObservableProperty]
+    private DateTime? lastPlayedAt;
+
+    [ObservableProperty]
+    private long totalPlayTimeSeconds;
+
+    [ObservableProperty]
+    private string? saveFolderPath;
+
+    [ObservableProperty]
+    private DateTime? lastSaveActivityAt;
+
+    [ObservableProperty]
+    private string platform = "PC";
 
     public string Source { get; set; } = "Manual";
 

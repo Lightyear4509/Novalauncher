@@ -4,26 +4,43 @@
     xmlns:models="using:NovaLauncher.Models"
     x:Class="NovaLauncher.Views.GameCard"
     x:DataType="models:Game"
-    Width="170">
+    Width="180">
+
+	<UserControl.Styles>
+
+		<Style Selector="Border#CardBorder">
+			<Setter Property="Background" Value="#1B202B" />
+			<Setter Property="BorderBrush" Value="#303747" />
+			<Setter Property="BorderThickness" Value="1" />
+		</Style>
+
+		<Style Selector="Border#CardBorder:pointerover">
+			<Setter Property="Background" Value="#222936" />
+			<Setter Property="BorderBrush" Value="#66C0F4" />
+			<Setter Property="BorderThickness" Value="2" />
+		</Style>
+
+		<Style Selector="Border#CardBorder:pointerover TextBlock#GameTitle">
+			<Setter Property="Foreground" Value="#FFFFFF" />
+		</Style>
+
+	</UserControl.Styles>
 
 	<Border
         x:Name="CardBorder"
-        Background="#1B202B"
-        BorderBrush="#303747"
-        BorderThickness="1"
         CornerRadius="9"
-        ClipToBounds="True">
+        ClipToBounds="True"
+        Cursor="Hand">
 
-		<Grid RowDefinitions="230,Auto">
+		<Grid RowDefinitions="270,Auto">
 
-			<!-- Cover area -->
+			<!-- Exact 2:3 portrait cover area -->
 			<Border
                 Grid.Row="0"
                 Background="#252C39">
 
 				<Grid>
 
-					<!-- Placeholder remains behind the image -->
 					<StackPanel
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -31,34 +48,56 @@
 
 						<TextBlock
                             HorizontalAlignment="Center"
-                            FontSize="44"
+                            FontSize="40"
                             Text="🎮" />
 
 						<TextBlock
                             HorizontalAlignment="Center"
-                            FontSize="12"
+                            FontSize="11"
                             Foreground="#7F8A9A"
-                            Text="No cover" />
+                            Text="No cover available" />
 
 					</StackPanel>
 
 					<Image
                         Source="{Binding CoverImagePath,
                             Converter={StaticResource CoverImageConverter}}"
-                        Stretch="UniformToFill" />
+                        Stretch="Uniform" />
 
 					<Border
-                        Margin="8"
+                        Height="65"
+                        VerticalAlignment="Bottom">
+
+						<Border.Background>
+							<LinearGradientBrush
+                                StartPoint="50%,0%"
+                                EndPoint="50%,100%">
+
+								<GradientStop
+                                    Offset="0"
+                                    Color="#0010151E" />
+
+								<GradientStop
+                                    Offset="1"
+                                    Color="#D810151E" />
+
+							</LinearGradientBrush>
+						</Border.Background>
+
+					</Border>
+
+					<Border
+                        Margin="9"
                         Padding="7,4"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
-                        Background="#CC171B24"
-                        CornerRadius="12"
+                        Background="#E6171B24"
+                        CornerRadius="14"
                         IsVisible="{Binding IsFavorite}">
 
 						<TextBlock
-                            FontSize="15"
-                            Foreground="Gold"
+                            FontSize="14"
+                            Foreground="#FFD54A"
                             Text="★" />
 
 					</Border>
@@ -67,29 +106,52 @@
 
 			</Border>
 
-			<!-- Game information -->
 			<Border
                 Grid.Row="1"
                 Padding="12">
 
 				<Grid
-                    MinHeight="58"
-                    RowDefinitions="Auto,Auto">
+                    MinHeight="69"
+                    RowDefinitions="Auto,Auto,*">
 
 					<TextBlock
+                        x:Name="GameTitle"
                         Grid.Row="0"
-                        FontSize="15"
+                        FontSize="14"
                         FontWeight="SemiBold"
-                        Foreground="White"
+                        Foreground="#F1F3F7"
+                        MaxLines="2"
                         Text="{Binding Name}"
-                        TextTrimming="CharacterEllipsis" />
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="Wrap" />
 
 					<TextBlock
                         Grid.Row="1"
-                        Margin="0,4,0,0"
-                        FontSize="11"
-                        Foreground="#7F8A9A"
-                        Text="Ready to play" />
+                        Margin="0,5,0,0"
+                        FontSize="10"
+                        Foreground="#8994A7"
+                        Text="{Binding Source}" />
+
+					<StackPanel
+                        Grid.Row="2"
+                        Margin="0,7,0,0"
+                        Orientation="Horizontal"
+                        Spacing="6">
+
+						<Border
+                            Width="7"
+                            Height="7"
+                            VerticalAlignment="Center"
+                            Background="#63D391"
+                            CornerRadius="4" />
+
+						<TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="10"
+                            Foreground="#AAB3C2"
+                            Text="Ready to play" />
+
+					</StackPanel>
 
 				</Grid>
 
